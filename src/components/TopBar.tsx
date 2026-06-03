@@ -34,49 +34,73 @@ export default function TopBar({ city, tone, accent, unit, onLocation, onBell, o
   const t = toneStyles(tone)
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '2px 2px 4px' }}>
+      {/* Location button */}
       <button
         onClick={onLocation}
         className="press"
+        aria-label={`Current location: ${city.name}. Tap to switch cities.`}
         style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: 'none', color: t.text, cursor: 'pointer', textAlign: 'left', padding: 0 }}
       >
-        <Icon name="pin" size={20} stroke={2.2} />
+        <Icon name="pin" size={20} stroke={2.2} aria-hidden="true" />
         <div style={{ minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{city.name}</span>
-            <Icon name="chevronDown" size={17} stroke={2.6} style={{ flexShrink: 0, opacity: 0.7 }} />
+            <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {city.name}
+            </span>
+            <Icon name="chevronDown" size={17} stroke={2.6} style={{ flexShrink: 0, opacity: 0.7 }} aria-hidden="true" />
           </div>
           <div style={{ fontSize: 12.5, color: t.dim, fontWeight: 600 }}>{city.time} · {city.region}</div>
         </div>
       </button>
 
       {/* Unit toggle */}
-      <div style={{
-        display: 'flex', borderRadius: 14,
-        background: t.cardBg, border: `1px solid ${t.cardBorder}`,
-        backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-        padding: 3, gap: 2, flexShrink: 0,
-      }}>
+      <div
+        role="group"
+        aria-label="Temperature unit"
+        style={{
+          display: 'flex', borderRadius: 14,
+          background: t.cardBg, border: `1px solid ${t.cardBorder}`,
+          backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+          padding: 3, gap: 2, flexShrink: 0,
+        }}
+      >
         {(['C', 'F'] as Unit[]).map(u => (
-          <button key={u} onClick={onUnitToggle} className="press" style={{
-            width: 32, height: 32, borderRadius: 11, border: 'none', cursor: 'pointer',
-            background: unit === u ? accent : 'transparent',
-            color: unit === u ? '#fff' : t.dim,
-            fontSize: 13, fontWeight: 800, transition: 'all .2s',
-          }}>
+          <button
+            key={u}
+            onClick={onUnitToggle}
+            aria-pressed={unit === u}
+            aria-label={`Degrees ${u === 'C' ? 'Celsius' : 'Fahrenheit'}`}
+            className="press"
+            style={{
+              width: 32, height: 32, borderRadius: 11, border: 'none', cursor: 'pointer',
+              background: unit === u ? accent : 'transparent',
+              color: unit === u ? '#fff' : t.dim,
+              fontSize: 13, fontWeight: 800, transition: 'all .2s',
+            }}
+          >
             °{u}
           </button>
         ))}
       </div>
 
-      <button onClick={onBell} className="press" style={iconBtnStyle(t)} aria-label="Alerts">
-        <Icon name="bell" size={20} stroke={2.2} />
+      {/* Bell / alerts */}
+      <button
+        onClick={onBell}
+        className="press"
+        style={iconBtnStyle(t)}
+        aria-label={city.alert ? `Weather alert: ${city.alert.kind}. Tap for details.` : 'No active alerts'}
+      >
+        <Icon name="bell" size={20} stroke={2.2} aria-hidden="true" />
         {city.alert && (
-          <span style={{
-            position: 'absolute', top: 9, right: 9,
-            width: 9, height: 9, borderRadius: 5,
-            background: 'oklch(0.64 0.21 25)',
-            border: `2px solid ${tone === 'light' ? 'rgba(255,255,255,0.3)' : '#fff'}`,
-          }} />
+          <span
+            aria-hidden="true"
+            style={{
+              position: 'absolute', top: 9, right: 9,
+              width: 9, height: 9, borderRadius: 5,
+              background: 'oklch(0.64 0.21 25)',
+              border: `2px solid ${tone === 'light' ? 'rgba(255,255,255,0.3)' : '#fff'}`,
+            }}
+          />
         )}
       </button>
     </div>

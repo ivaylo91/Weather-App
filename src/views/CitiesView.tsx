@@ -34,11 +34,20 @@ function CityCard({ c, themeKey, unit, onSelect, onRemove, current }: CityCardPr
   const ct = toneStyles(sky.tone)
 
   return (
-    <div onClick={onSelect} className="press city-card" style={{
-      position: 'relative', borderRadius: 24, padding: 18, cursor: 'pointer', overflow: 'hidden',
-      background: sky.gradient, color: ct.text, boxShadow: '0 8px 26px rgba(30,50,90,0.16)',
-      border: current ? `2px solid ${ct.text}` : '2px solid transparent',
-    }}>
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onSelect}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect() } }}
+      aria-label={`${c.name}, ${CONDITIONS[cond].label}, ${conv(temp, unit)} degrees. ${current ? 'Current city.' : ''}`}
+      aria-pressed={current}
+      className="press city-card"
+      style={{
+        position: 'relative', borderRadius: 24, padding: 18, cursor: 'pointer', overflow: 'hidden',
+        background: sky.gradient, color: ct.text, boxShadow: '0 8px 26px rgba(30,50,90,0.16)',
+        border: current ? `2px solid ${ct.text}` : '2px solid transparent',
+      }}
+    >
       <div style={{ position: 'absolute', right: -6, top: -10, opacity: 0.9 }}>
         <WeatherGlyph kind={cond} size={84} />
       </div>
@@ -117,7 +126,7 @@ export default function CitiesView({ cities, currentId, themeKey, tone, accent, 
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <main aria-label="Cities" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
         <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: -0.6, margin: '2px 2px 14px', color: t.text }}>Cities</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: t.cardBg, border: `1px solid ${t.cardBorder}`, borderRadius: 18, padding: '12px 15px', color: t.dim, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
@@ -126,6 +135,7 @@ export default function CitiesView({ cities, currentId, themeKey, tone, accent, 
             value={q}
             onChange={e => handleQueryChange(e.target.value)}
             placeholder="Search for a city or airport"
+            aria-label="Search for a city or airport"
             style={{ flex: 1, border: 'none', background: 'none', outline: 'none', color: t.text, fontSize: 15.5, fontWeight: 600, fontFamily: 'inherit' }}
           />
           {q && (
@@ -180,6 +190,6 @@ export default function CitiesView({ cities, currentId, themeKey, tone, accent, 
           No cities found for "{q}".
         </div>
       )}
-    </div>
+    </main>
   )
 }

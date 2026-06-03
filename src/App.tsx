@@ -1,16 +1,30 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { skyFor, toneStyles, THEMES } from './utils/sky'
 import { fetchCityData, fetchAlerts, reverseGeocode } from './api/weather'
-import type { StaticCity, CityData, Unit } from './types'
+import type { StaticCity, CityData, Unit, WeatherTone } from './types'
 import Onboarding from './components/Onboarding'
 import TopBar from './components/TopBar'
 import PillNav from './components/PillNav'
 import AlertSheet from './components/AlertSheet'
-import TodayView from './views/TodayView'
-import ForecastView from './views/ForecastView'
-import RadarView from './views/RadarView'
-import CitiesView from './views/CitiesView'
+import ErrorBoundary from './components/ErrorBoundary'
+
+const TodayView    = lazy(() => import('./views/TodayView'))
+const ForecastView = lazy(() => import('./views/ForecastView'))
+const RadarView    = lazy(() => import('./views/RadarView'))
+const CitiesView   = lazy(() => import('./views/CitiesView'))
+
+function ViewSkeleton({ tone }: { tone: WeatherTone }) {
+  const t = toneStyles(tone)
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 8 }}>
+      <style>{`@keyframes vsk{0%,100%{opacity:.4}50%{opacity:.85}}`}</style>
+      {[168, 270, 210].map((h, i) => (
+        <div key={i} style={{ height: h, borderRadius: 26, background: t.cardBg, animation: `vsk 1.8s ease-in-out ${i * 0.15}s infinite` }} />
+      ))}
+    </div>
+  )
+}
 
 // ---- localStorage helpers ----
 const LS = {
@@ -336,9 +350,13 @@ export default function App() {
             </button>
           </div>
 
-          <div key={view} className="view-fade">
-            {renderView()}
-          </div>
+          <ErrorBoundary resetKey={view}>
+            <Suspense fallback={<ViewSkeleton tone={tone} />}>
+              <div key={view} className="view-fade">
+                {renderView()}
+              </div>
+            </Suspense>
+          </ErrorBoundary>
           <div style={{ height: 110 }} />
         </div>
       </div>
