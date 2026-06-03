@@ -1,14 +1,16 @@
-import type { WeatherTone, DailyDay } from '../types'
+import type { WeatherTone, DailyDay, Unit } from '../types'
 import { toneStyles } from '../utils/sky'
+import { conv } from '../utils/temperature'
 import { WeatherGlyph } from './WeatherScene'
 
 interface DailyListProps {
   days: DailyDay[]
   tone: WeatherTone
   accent: string
+  unit?: Unit
 }
 
-export default function DailyList({ days, tone, accent }: DailyListProps) {
+export default function DailyList({ days, tone, accent, unit = 'C' }: DailyListProps) {
   const t = toneStyles(tone)
   const his = days.map(d => d.hi)
   const los = days.map(d => d.lo)
@@ -44,7 +46,7 @@ export default function DailyList({ days, tone, accent }: DailyListProps) {
               {d.pop}%
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: t.dim, width: 26, textAlign: 'right' }}>{d.lo}°</span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: t.dim, width: 26, textAlign: 'right' }}>{conv(d.lo, unit)}°</span>
               <div style={{ position: 'relative', flex: 1, height: 6, borderRadius: 3, background: t.track }}>
                 <div style={{
                   position: 'absolute',
@@ -56,7 +58,7 @@ export default function DailyList({ days, tone, accent }: DailyListProps) {
                   background: 'linear-gradient(90deg, oklch(0.78 0.13 230), oklch(0.82 0.15 78), oklch(0.72 0.18 35))',
                 }} />
               </div>
-              <span style={{ fontSize: 14, fontWeight: 800, width: 26 }}>{d.hi}°</span>
+              <span style={{ fontSize: 14, fontWeight: 800, width: 26 }}>{conv(d.hi, unit)}°</span>
             </div>
           </div>
         )

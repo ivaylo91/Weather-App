@@ -1,5 +1,6 @@
-import type { WeatherTone, HourlyPoint } from '../types'
+import type { WeatherTone, HourlyPoint, Unit } from '../types'
 import { toneStyles } from '../utils/sky'
+import { conv } from '../utils/temperature'
 import Icon from './Icon'
 import { WeatherGlyph } from './WeatherScene'
 
@@ -25,9 +26,10 @@ interface HourlyStripProps {
   hours: HourlyPoint[]
   tone: WeatherTone
   accent: string
+  unit?: Unit
 }
 
-export default function HourlyStrip({ hours, tone, accent }: HourlyStripProps) {
+export default function HourlyStrip({ hours, tone, accent, unit = 'C' }: HourlyStripProps) {
   const t = toneStyles(tone)
   const cellW = 62
   const H = 150
@@ -83,7 +85,7 @@ export default function HourlyStrip({ hours, tone, accent }: HourlyStripProps) {
                 <div style={{ transform: 'scale(0.92)' }}>
                   <WeatherGlyph kind={h.cond} size={26} />
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 700 }}>{h.temp}°</div>
+                <div style={{ fontSize: 15, fontWeight: 700 }}>{conv(h.temp, unit)}°</div>
                 {h.pop >= 25 && (
                   <div style={{ fontSize: 10.5, fontWeight: 700, color: accent, display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Icon name="drop" size={10} stroke={2.4} />{h.pop}%

@@ -1,4 +1,4 @@
-import type { WeatherTone, CityData } from '../types'
+import type { WeatherTone, CityData, Unit } from '../types'
 import { toneStyles } from '../utils/sky'
 import Icon from './Icon'
 
@@ -6,8 +6,10 @@ interface TopBarProps {
   city: CityData
   tone: WeatherTone
   accent: string
+  unit: Unit
   onLocation: () => void
   onBell: () => void
+  onUnitToggle: () => void
 }
 
 function iconBtnStyle(t: ReturnType<typeof toneStyles>) {
@@ -28,10 +30,10 @@ function iconBtnStyle(t: ReturnType<typeof toneStyles>) {
   }
 }
 
-export default function TopBar({ city, tone, accent: _accent, onLocation, onBell }: TopBarProps) {
+export default function TopBar({ city, tone, accent, unit, onLocation, onBell, onUnitToggle }: TopBarProps) {
   const t = toneStyles(tone)
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '2px 2px 4px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '2px 2px 4px' }}>
       <button
         onClick={onLocation}
         className="press"
@@ -46,16 +48,32 @@ export default function TopBar({ city, tone, accent: _accent, onLocation, onBell
           <div style={{ fontSize: 12.5, color: t.dim, fontWeight: 600 }}>{city.time} · {city.region}</div>
         </div>
       </button>
+
+      {/* Unit toggle */}
+      <div style={{
+        display: 'flex', borderRadius: 14,
+        background: t.cardBg, border: `1px solid ${t.cardBorder}`,
+        backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+        padding: 3, gap: 2, flexShrink: 0,
+      }}>
+        {(['C', 'F'] as Unit[]).map(u => (
+          <button key={u} onClick={onUnitToggle} className="press" style={{
+            width: 32, height: 32, borderRadius: 11, border: 'none', cursor: 'pointer',
+            background: unit === u ? accent : 'transparent',
+            color: unit === u ? '#fff' : t.dim,
+            fontSize: 13, fontWeight: 800, transition: 'all .2s',
+          }}>
+            °{u}
+          </button>
+        ))}
+      </div>
+
       <button onClick={onBell} className="press" style={iconBtnStyle(t)} aria-label="Alerts">
         <Icon name="bell" size={20} stroke={2.2} />
         {city.alert && (
           <span style={{
-            position: 'absolute',
-            top: 9,
-            right: 9,
-            width: 9,
-            height: 9,
-            borderRadius: 5,
+            position: 'absolute', top: 9, right: 9,
+            width: 9, height: 9, borderRadius: 5,
             background: 'oklch(0.64 0.21 25)',
             border: `2px solid ${tone === 'light' ? 'rgba(255,255,255,0.3)' : '#fff'}`,
           }} />

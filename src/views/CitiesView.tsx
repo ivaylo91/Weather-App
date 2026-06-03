@@ -1,22 +1,38 @@
 import { useState } from 'react'
-import type { WeatherTone, StaticCity, CitySuggestion } from '../types'
+import { useQuery } from '@tanstack/react-query'
+import type { WeatherTone, StaticCity, CitySuggestion, Unit } from '../types'
 import { toneStyles, skyFor, CONDITIONS } from '../utils/sky'
+import { conv } from '../utils/temperature'
+import { fetchCityData, fetchCitySuggestions } from '../api/weather'
 import { WeatherGlyph } from '../components/WeatherScene'
 import { SectionLabel } from '../components/Card'
 import Icon from '../components/Icon'
-import { fetchCitySuggestions } from '../api/weather'
 
 interface CityCardProps {
   c: StaticCity
   themeKey: string
+  unit: Unit
   onSelect: () => void
   onRemove?: () => void
   current: boolean
 }
 
-function CityCard({ c, themeKey, onSelect, onRemove, current }: CityCardProps) {
-  const sky = skyFor(c.cond, themeKey)
+function CityCard({ c, themeKey, unit, onSelect, onRemove, current }: CityCardProps) {
+  // Fetch live weather — stale after 15 min, show static while loading
+  const { data } = useQuery({
+    queryKey: ['cityCard', c.latitude, c.longitude],
+    queryFn: () => fetchCityData(c.latitude, c.longitude, c.name, c.region, c.id),
+    staleTime: 1000 * 60 * 15,
+  })
+
+  const cond = data?.cond ?? c.cond
+  const temp = data?.temp ?? c.temp
+  const hi   = data?.hi   ?? c.hi
+  const lo   = data?.lo   ?? c.lo
+
+  const sky = skyFor(cond, themeKey)
   const ct = toneStyles(sky.tone)
+
   return (
     <div onClick={onSelect} className="press city-card" style={{
       position: 'relative', borderRadius: 24, padding: 18, cursor: 'pointer', overflow: 'hidden',
@@ -24,7 +40,7 @@ function CityCard({ c, themeKey, onSelect, onRemove, current }: CityCardProps) {
       border: current ? `2px solid ${ct.text}` : '2px solid transparent',
     }}>
       <div style={{ position: 'absolute', right: -6, top: -10, opacity: 0.9 }}>
-        <WeatherGlyph kind={c.cond} size={84} />
+        <WeatherGlyph kind={cond} size={84} />
       </div>
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: 96, justifyContent: 'space-between' }}>
         <div>
@@ -36,10 +52,12 @@ function CityCard({ c, themeKey, onSelect, onRemove, current }: CityCardProps) {
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
           <div style={{ fontSize: 13, fontWeight: 700, opacity: 0.85 }}>
-            {CONDITIONS[c.cond].label}
-            <span style={{ opacity: 0.7 }}> · H:{c.hi}° L:{c.lo}°</span>
+            {CONDITIONS[cond].label}
+            <span style={{ opacity: 0.7 }}> · H:{conv(hi, unit)}° L:{conv(lo, unit)}°</span>
           </div>
-          <div style={{ fontSize: 40, fontWeight: 500, letterSpacing: -2, lineHeight: 1 }}>{c.temp}°</div>
+          <div style={{ fontSize: 40, fontWeight: 500, letterSpacing: -2, lineHeight: 1 }}>
+            {conv(temp, unit)}°
+          </div>
         </div>
       </div>
       {onRemove && !current && (
@@ -62,12 +80,13 @@ interface CitiesViewProps {
   themeKey: string
   tone: WeatherTone
   accent: string
+  unit: Unit
   onSelect: (id: string) => void
   onRemove: (id: string) => void
   onSearch: (lat: number, lon: number, name: string, region: string) => void
 }
 
-export default function CitiesView({ cities, currentId, themeKey, tone, accent, onSelect, onRemove, onSearch }: CitiesViewProps) {
+export default function CitiesView({ cities, currentId, themeKey, tone, accent, unit, onSelect, onRemove, onSearch }: CitiesViewProps) {
   const t = toneStyles(tone)
   const [q, setQ] = useState('')
   const [suggestions, setSuggestions] = useState<CitySuggestion[]>([])
@@ -75,14 +94,10 @@ export default function CitiesView({ cities, currentId, themeKey, tone, accent, 
 
   const handleQueryChange = async (val: string) => {
     setQ(val)
-    if (val.trim().length < 2) {
-      setSuggestions([])
-      return
-    }
+    if (val.trim().length < 2) { setSuggestions([]); return }
     setSearching(true)
     try {
-      const results = await fetchCitySuggestions(val)
-      setSuggestions(results)
+      setSuggestions(await fetchCitySuggestions(val))
     } catch {
       setSuggestions([])
     } finally {
@@ -128,8 +143,8 @@ export default function CitiesView({ cities, currentId, themeKey, tone, accent, 
             {suggestions.map(s => (
               <button key={s.id} onClick={() => handleAddSuggestion(s)} className="press" style={{
                 display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px', borderRadius: 18,
-                border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.text, cursor: 'pointer',
-                textAlign: 'left', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.text,
+                cursor: 'pointer', textAlign: 'left', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
               }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 16, fontWeight: 700 }}>{s.name}</div>
@@ -152,6 +167,7 @@ export default function CitiesView({ cities, currentId, themeKey, tone, accent, 
             key={c.id}
             c={c}
             themeKey={themeKey}
+            unit={unit}
             current={c.id === currentId}
             onSelect={() => onSelect(c.id)}
             onRemove={() => onRemove(c.id)}

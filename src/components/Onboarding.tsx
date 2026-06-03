@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { skyFor, toneStyles } from '../utils/sky'
+import { reverseGeocode } from '../api/weather'
 import { WeatherScene } from './WeatherScene'
 import Icon from './Icon'
 
@@ -28,6 +29,20 @@ interface OnboardingProps {
 
 export default function Onboarding({ themeKey, onDone }: OnboardingProps) {
   const [step, setStep] = useState(0)
+  const [locating, setLocating] = useState(false)
+
+  function handleUseLocation() {
+    if (!navigator.geolocation) { onDone(); return }
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      async pos => {
+        await reverseGeocode(pos.coords.latitude, pos.coords.longitude)
+        onDone()
+      },
+      () => onDone(),
+      { timeout: 8000 }
+    )
+  }
   const sky = skyFor('partly-cloudy-day', themeKey)
   const t = toneStyles(sky.tone)
   const accent = sky.accent
@@ -129,11 +144,12 @@ export default function Onboarding({ themeKey, onDone }: OnboardingProps) {
             </p>
             <div className="hero-rise" style={{ display: 'flex', flexDirection: 'column', gap: 11, marginTop: 30, animationDelay: '.15s' }}>
               <button
-                onClick={() => onDone()}
+                onClick={handleUseLocation}
+                disabled={locating}
                 className="press"
-                style={{ border: 'none', background: accent, color: '#fff', fontWeight: 800, fontSize: 16.5, padding: '16px', borderRadius: 22, cursor: 'pointer', boxShadow: `0 10px 26px ${accent}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}
+                style={{ border: 'none', background: accent, color: '#fff', fontWeight: 800, fontSize: 16.5, padding: '16px', borderRadius: 22, cursor: locating ? 'default' : 'pointer', opacity: locating ? 0.8 : 1, boxShadow: `0 10px 26px ${accent}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}
               >
-                <Icon name="pin" size={20} stroke={2.4} />Use my location
+                <Icon name="pin" size={20} stroke={2.4} />{locating ? 'Locating…' : 'Use my location'}
               </button>
               <button
                 onClick={() => onDone('cities')}
