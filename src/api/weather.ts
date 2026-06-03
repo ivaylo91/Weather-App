@@ -1,80 +1,40 @@
+import type { CityData, CityDetails, WeatherCondition, HourlyPoint, DailyDay, CitySuggestion } from '../types'
+
 const GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search'
 const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast'
 const AIR_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality'
 
-export interface HourlyPoint {
-  time: string
-  temp: number
-  precip: number
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+function wmoToCondition(code: number, isDay: boolean): WeatherCondition {
+  if (code === 0) return isDay ? 'clear-day' : 'clear-night'
+  if (code <= 2) return isDay ? 'partly-cloudy-day' : 'partly-cloudy-night'
+  if (code === 3) return 'cloudy'
+  if (code <= 49) return 'fog'
+  if (code <= 69) return 'rain'
+  if (code <= 79) return 'snow'
+  if (code <= 82) return 'rain'
+  if (code <= 86) return 'snow'
+  if (code <= 99) return 'thunderstorm'
+  return isDay ? 'clear-day' : 'clear-night'
 }
 
-export interface WeatherData {
-  city: string
-  country: string
-  latitude: number
-  longitude: number
-  temperature: number
-  feelsLike: number
-  humidity: number
-  windspeed: number
-  weathercode: number
-  isDay: boolean
-  uvIndex: number
-  sunrise: string
-  sunset: string
-  hourly: HourlyPoint[]
-  forecast: ForecastDay[]
+function degreesToDir(deg: number): string {
+  const dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
+  const idx = Math.round(deg / 22.5) % 16
+  return dirs[idx]
 }
 
-export interface ForecastDay {
-  date: string
-  maxTemp: number
-  minTemp: number
-  weathercode: number
+function aqiLabel(aqi: number): string {
+  if (aqi <= 20) return 'Good'
+  if (aqi <= 40) return 'Fair'
+  if (aqi <= 60) return 'Moderate'
+  if (aqi <= 80) return 'Poor'
+  if (aqi <= 100) return 'Very Poor'
+  return 'Extremely Poor'
 }
 
-export interface CitySuggestion {
-  id: number
-  name: string
-  country: string
-  admin1?: string
-  latitude: number
-  longitude: number
-}
-
-export interface AirQualityData {
-  aqi: number
-  label: string
-}
-
-export function getWeatherDescription(code: number): string {
-  if (code === 0) return 'Clear sky'
-  if (code <= 2) return 'Partly cloudy'
-  if (code === 3) return 'Overcast'
-  if (code <= 49) return 'Foggy'
-  if (code <= 59) return 'Drizzle'
-  if (code <= 69) return 'Rain'
-  if (code <= 79) return 'Snow'
-  if (code <= 82) return 'Rain showers'
-  if (code <= 86) return 'Snow showers'
-  if (code <= 99) return 'Thunderstorm'
-  return 'Unknown'
-}
-
-export function getWeatherEmoji(code: number, isDay: boolean): string {
-  if (code === 0) return isDay ? '☀️' : '🌙'
-  if (code <= 2) return isDay ? '⛅' : '🌤️'
-  if (code === 3) return '☁️'
-  if (code <= 49) return '🌫️'
-  if (code <= 69) return '🌧️'
-  if (code <= 79) return '❄️'
-  if (code <= 82) return '🌦️'
-  if (code <= 86) return '🌨️'
-  if (code <= 99) return '⛈️'
-  return '🌡️'
-}
-
-export function getUVLabel(uv: number): string {
+function uvLabel(uv: number): string {
   if (uv <= 2) return 'Low'
   if (uv <= 5) return 'Moderate'
   if (uv <= 7) return 'High'
@@ -82,73 +42,171 @@ export function getUVLabel(uv: number): string {
   return 'Extreme'
 }
 
-function formatHour(timeStr: string): string {
-  const hour = parseInt(timeStr.split('T')[1].split(':')[0])
-  if (hour === 0) return '12am'
-  if (hour < 12) return `${hour}am`
-  if (hour === 12) return '12pm'
-  return `${hour - 12}pm`
+function formatTime12(isoTime: string): string {
+  const parts = isoTime.split('T')
+  if (parts.length < 2) return isoTime
+  const [hStr, mStr] = parts[1].split(':')
+  const h = parseInt(hStr, 10)
+  const m = parseInt(mStr, 10)
+  const ampm = h < 12 ? 'AM' : 'PM'
+  const hr = h % 12 === 0 ? 12 : h % 12
+  return `${hr}:${m.toString().padStart(2, '0')} ${ampm}`
 }
 
-async function fetchWeatherData(lat: number, lon: number, city: string, country: string): Promise<WeatherData> {
-  const res = await fetch(
+export async function fetchCityData(
+  lat: number,
+  lon: number,
+  name: string,
+  region: string,
+  id: string
+): Promise<CityData> {
+  const weatherUrl =
     `${WEATHER_URL}?latitude=${lat}&longitude=${lon}` +
-    `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,is_day` +
-    `&hourly=temperature_2m,precipitation_probability` +
-    `&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset` +
+    `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,weather_code,is_day` +
+    `&hourly=temperature_2m,precipitation_probability,weather_code,is_day` +
+    `&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset,precipitation_probability_max` +
     `&forecast_days=7&timezone=auto`
-  )
-  if (!res.ok) throw new Error('Failed to fetch weather')
-  const weather = await res.json()
+
+  const airUrl = `${AIR_URL}?latitude=${lat}&longitude=${lon}&current=european_aqi`
+
+  const [weatherRes, airRes] = await Promise.all([
+    fetch(weatherUrl),
+    fetch(airUrl).catch(() => null),
+  ])
+
+  if (!weatherRes.ok) throw new Error('Failed to fetch weather')
+  const weather = await weatherRes.json()
+
+  let aqi = 0
+  let aqiLbl = 'Good'
+  if (airRes && airRes.ok) {
+    const airData = await airRes.json()
+    aqi = Math.round(airData.current?.european_aqi ?? 0)
+    aqiLbl = aqiLabel(aqi)
+  }
+
   const current = weather.current
+  const isDay: boolean = current.is_day === 1
+  const currentCode: number = current.weather_code
+  const cond: WeatherCondition = wmoToCondition(currentCode, isDay)
 
-  const currentTime: string = current.time
-  const startIndex = weather.hourly.time.findIndex((t: string) => t >= currentTime)
-  const si = startIndex >= 0 ? startIndex : 0
+  const temp = Math.round(current.temperature_2m)
+  const feels = Math.round(current.apparent_temperature)
+  const humidity = Math.round(current.relative_humidity_2m)
+  const wind = Math.round(current.wind_speed_10m)
+  const windDeg = current.wind_direction_10m ?? 0
+  const gust = Math.round(current.wind_gusts_10m ?? wind)
+  const pressure = Math.round(current.surface_pressure ?? 1013)
+  const visibilityRaw = weather.current?.visibility ?? 14000
+  const visibility = Math.round(visibilityRaw / 1000)
+  const dew = Math.round(temp - ((100 - humidity) / 5))
 
-  const hourly: HourlyPoint[] = weather.hourly.time
-    .slice(si, si + 24)
-    .map((t: string, i: number) => ({
-      time: i === 0 ? 'Now' : formatHour(t),
-      temp: Math.round(weather.hourly.temperature_2m[si + i]),
-      precip: weather.hourly.precipitation_probability[si + i] ?? 0,
-    }))
+  const uvRaw = Math.round(weather.daily?.uv_index_max?.[0] ?? 0)
+
+  const sunriseIso: string = weather.daily?.sunrise?.[0] ?? ''
+  const sunsetIso: string = weather.daily?.sunset?.[0] ?? ''
+  const sunriseT = sunriseIso ? formatTime12(sunriseIso) : '6:00 AM'
+  const sunsetT = sunsetIso ? formatTime12(sunsetIso) : '8:00 PM'
+
+  // extract hour from ISO string for sunrise/sunset numbers
+  const sunriseHour = sunriseIso ? parseInt(sunriseIso.split('T')[1]?.split(':')[0] ?? '6', 10) : 6
+  const sunsetHour = sunsetIso ? parseInt(sunsetIso.split('T')[1]?.split(':')[0] ?? '20', 10) : 20
+
+  const hi = Math.round(weather.daily?.temperature_2m_max?.[0] ?? temp + 2)
+  const lo = Math.round(weather.daily?.temperature_2m_min?.[0] ?? temp - 4)
+
+  // Current local time string
+  const currentIso: string = current.time ?? new Date().toISOString()
+  const nowHour = parseInt(currentIso.split('T')[1]?.split(':')[0] ?? '12', 10)
+  const nowMin = parseInt(currentIso.split('T')[1]?.split(':')[1] ?? '0', 10)
+  const ampm = nowHour < 12 ? 'AM' : 'PM'
+  const hr12 = nowHour % 12 === 0 ? 12 : nowHour % 12
+  const timeStr = `${hr12}:${nowMin.toString().padStart(2, '0')} ${ampm}`
+
+  const det: CityDetails = {
+    feels,
+    uv: uvRaw,
+    uvLabel: uvLabel(uvRaw),
+    wind,
+    windDir: degreesToDir(windDeg),
+    gust,
+    humidity,
+    pressure,
+    visibility: visibility > 0 ? visibility : 14,
+    dew,
+    sunriseT,
+    sunsetT,
+    aqi,
+    aqiLabel: aqiLbl,
+  }
+
+  // Hourly points: find current hour index and take 24 hours
+  const hourlyTimes: string[] = weather.hourly?.time ?? []
+  const hourlyTemps: number[] = weather.hourly?.temperature_2m ?? []
+  const hourlyPop: number[] = weather.hourly?.precipitation_probability ?? []
+  const hourlyCodes: number[] = weather.hourly?.weather_code ?? []
+  const hourlyIsDay: number[] = weather.hourly?.is_day ?? []
+
+  const startIdx = Math.max(0, hourlyTimes.findIndex((t: string) => t >= currentIso.slice(0, 13)))
+
+  const hourly: HourlyPoint[] = []
+  for (let i = 0; i < 24; i++) {
+    const idx = startIdx + i
+    if (idx >= hourlyTimes.length) break
+    const hourStr = hourlyTimes[idx]?.split('T')[1]?.split(':')[0] ?? '0'
+    const hourNum = parseInt(hourStr, 10)
+    const hIsDay = (hourlyIsDay[idx] ?? 1) === 1
+    const hCode = hourlyCodes[idx] ?? 0
+    hourly.push({
+      i,
+      hour: hourNum,
+      temp: Math.round(hourlyTemps[idx] ?? temp),
+      cond: wmoToCondition(hCode, hIsDay),
+      pop: Math.round(hourlyPop[idx] ?? 0),
+      now: i === 0,
+    })
+  }
+
+  // Daily points
+  const dailyTimes: string[] = weather.daily?.time ?? []
+  const dailyMax: number[] = weather.daily?.temperature_2m_max ?? []
+  const dailyMin: number[] = weather.daily?.temperature_2m_min ?? []
+  const dailyCodes: number[] = weather.daily?.weather_code ?? []
+  const dailyPop: number[] = weather.daily?.precipitation_probability_max ?? []
+
+  const daily: DailyDay[] = dailyTimes.slice(0, 7).map((dateStr: string, i: number) => {
+    const date = new Date(dateStr + 'T00:00:00')
+    const dayOfWeek = date.getDay()
+    const dayLabel = i === 0 ? 'Today' : DAYS[dayOfWeek]
+    // Use is_day approximation: day forecasts are day by default
+    const dayCond = wmoToCondition(dailyCodes[i] ?? 0, true)
+    return {
+      day: dayLabel,
+      cond: dayCond,
+      hi: Math.round(dailyMax[i] ?? temp + 2),
+      lo: Math.round(dailyMin[i] ?? temp - 4),
+      pop: Math.round(dailyPop[i] ?? 0),
+    }
+  })
 
   return {
-    city,
-    country,
+    id,
+    name,
+    region,
+    cond,
+    temp,
+    hi,
+    lo,
+    time: timeStr,
+    sunrise: sunriseHour,
+    sunset: sunsetHour,
+    det,
+    alert: null,
+    hourly,
+    daily,
     latitude: lat,
     longitude: lon,
-    temperature: Math.round(current.temperature_2m),
-    feelsLike: Math.round(current.apparent_temperature),
-    humidity: current.relative_humidity_2m,
-    windspeed: Math.round(current.wind_speed_10m),
-    weathercode: current.weather_code,
-    isDay: current.is_day === 1,
-    uvIndex: Math.round(weather.daily.uv_index_max[0] ?? 0),
-    sunrise: weather.daily.sunrise[0]?.split('T')[1] ?? '--:--',
-    sunset: weather.daily.sunset[0]?.split('T')[1] ?? '--:--',
-    hourly,
-    forecast: weather.daily.time.map((date: string, i: number) => ({
-      date,
-      maxTemp: Math.round(weather.daily.temperature_2m_max[i]),
-      minTemp: Math.round(weather.daily.temperature_2m_min[i]),
-      weathercode: weather.daily.weather_code[i],
-    })),
   }
-}
-
-export async function fetchWeather(city: string): Promise<WeatherData> {
-  const geoRes = await fetch(`${GEO_URL}?name=${encodeURIComponent(city)}&count=1&language=en&format=json`)
-  if (!geoRes.ok) throw new Error('Failed to geocode city')
-  const geoData = await geoRes.json()
-  if (!geoData.results?.length) throw new Error(`City "${city}" not found`)
-  const { latitude, longitude, name, country } = geoData.results[0]
-  return fetchWeatherData(latitude, longitude, name, country)
-}
-
-export async function fetchWeatherByCoords(lat: number, lon: number, displayName: string, country = ''): Promise<WeatherData> {
-  return fetchWeatherData(lat, lon, displayName, country)
 }
 
 export async function fetchCitySuggestions(query: string): Promise<CitySuggestion[]> {
@@ -159,31 +217,20 @@ export async function fetchCitySuggestions(query: string): Promise<CitySuggestio
   return data.results ?? []
 }
 
-export async function fetchAirQuality(lat: number, lon: number): Promise<AirQualityData> {
-  const res = await fetch(`${AIR_URL}?latitude=${lat}&longitude=${lon}&current=european_aqi`)
-  if (!res.ok) throw new Error('Failed to fetch air quality')
-  const data = await res.json()
-  const aqi = Math.round(data.current.european_aqi ?? 0)
-  let label = 'Good'
-  if (aqi > 100) label = 'Extremely Poor'
-  else if (aqi > 80) label = 'Very Poor'
-  else if (aqi > 60) label = 'Poor'
-  else if (aqi > 40) label = 'Moderate'
-  else if (aqi > 20) label = 'Fair'
-  return { aqi, label }
-}
-
-export async function reverseGeocode(lat: number, lon: number): Promise<{ city: string; country: string }> {
+export async function reverseGeocode(lat: number, lon: number): Promise<{ city: string; region: string }> {
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
       { headers: { 'Accept-Language': 'en' } }
     )
-    if (!res.ok) return { city: 'Your Location', country: '' }
+    if (!res.ok) return { city: 'Your Location', region: '' }
     const data = await res.json()
     const city = data.address?.city || data.address?.town || data.address?.village || data.address?.county || 'Your Location'
-    return { city, country: data.address?.country ?? '' }
+    const state = data.address?.state || ''
+    const country = data.address?.country || ''
+    const region = [state, country].filter(Boolean).join(', ')
+    return { city, region }
   } catch {
-    return { city: 'Your Location', country: '' }
+    return { city: 'Your Location', region: '' }
   }
 }

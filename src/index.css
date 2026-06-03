@@ -1,3 +1,133 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #111;
+  color: #fff;
+}
+#root { height: 100%; }
+button { font-family: inherit; }
+input { font-family: inherit; }
+
+/* ---- layout ---- */
+.bg-layer { position: fixed; inset: 0; z-index: 0; transition: opacity .6s; }
+.bg-fade { animation: bgFade .6s ease-out both; }
+.app-scroll { height: 100%; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+.app-container { max-width: 760px; margin: 0 auto; padding: 18px 18px 0; }
+
+/* ---- hide scrollbar ---- */
+.hide-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+.hide-scroll::-webkit-scrollbar { display: none; }
+
+/* ---- press feedback ---- */
+.press { transition: transform .14s, opacity .14s; }
+.press:active { transform: scale(0.96); opacity: 0.88; }
+
+/* ---- view transition ---- */
+.view-fade { animation: viewFade .35s ease-out forwards; }
+
+/* ---- hero entrance ---- */
+.hero-rise { opacity: 1; transform: translateY(0); animation: heroRise .55s cubic-bezier(.22,1,.36,1) forwards; }
+
+/* ---- card hover ---- */
+.card { transition: transform .2s, box-shadow .2s; }
+.city-card { transition: transform .2s, box-shadow .2s; }
+.city-card:hover { transform: translateY(-3px); box-shadow: 0 14px 36px rgba(30,50,90,0.24); }
+.city-remove { opacity: 0; transition: opacity .18s; }
+.city-card:hover .city-remove { opacity: 1; }
+
+/* ---- detail grid responsive ---- */
+@media (min-width: 560px) {
+  .detail-grid { grid-template-columns: repeat(4, 1fr) !important; }
+}
+
+/* ======== ANIMATIONS ======== */
+/* sun rays slow rotation */
+.sun-rays { animation: spinRays 22s linear infinite; }
+@keyframes spinRays { to { transform: rotate(360deg); } }
+
+/* sun glow pulse */
+.sun-glow { animation: glowPulse 4s ease-in-out infinite alternate; }
+@keyframes glowPulse { 0% { r: inherit; opacity: 0.3; } 100% { opacity: 0.5; } }
+
+/* star twinkle */
+.twinkle { animation: twinkle 2.5s ease-in-out infinite alternate; }
+@keyframes twinkle { 0% { opacity: 0.15; } 100% { opacity: 0.9; } }
+
+/* rain */
+.raindrop { animation: rainFall .8s linear infinite; }
+@keyframes rainFall { 0% { transform: translateY(-16px); opacity: 0; } 15% { opacity: 0.85; } 100% { transform: translateY(68px); opacity: 0; } }
+
+/* snow */
+.snow-sway-a { animation: snowA 2.6s linear infinite; }
+.snow-sway-b { animation: snowB 2.6s linear infinite; }
+@keyframes snowA { 0% { transform: translate(0,-12px); opacity: 0; } 20% { opacity: 0.9; } 50% { transform: translate(7px,28px); } 100% { transform: translate(-5px,68px); opacity: 0; } }
+@keyframes snowB { 0% { transform: translate(0,-12px); opacity: 0; } 20% { opacity: 0.9; } 50% { transform: translate(-8px,28px); } 100% { transform: translate(4px,68px); opacity: 0; } }
+
+/* cloud drift */
+.drift-a { animation: driftA 16s ease-in-out infinite; }
+.drift-b { animation: driftB 22s ease-in-out infinite; }
+@keyframes driftA { 0%,100% { transform: translateX(-10px); } 50% { transform: translateX(10px); } }
+@keyframes driftB { 0%,100% { transform: translateX(8px); } 50% { transform: translateX(-12px); } }
+
+/* float slow (sun/moon) */
+.float-slow { animation: floatSlow 6s ease-in-out infinite; }
+@keyframes floatSlow { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+
+/* lightning */
+.lightning { animation: lightningFlash 4s ease infinite; }
+@keyframes lightningFlash { 0%,88%,92%,95%,100% { opacity: 0; } 89% { opacity: 1; } 93% { opacity: 0.7; } }
+
+/* fog drift */
+.fog-a { animation: fogDriftA 12s ease-in-out infinite; }
+.fog-b { animation: fogDriftB 14s ease-in-out infinite; }
+@keyframes fogDriftA { 0%,100% { transform: translateX(-8px); opacity: 0.45; } 50% { transform: translateX(8px); opacity: 0.6; } }
+@keyframes fogDriftB { 0%,100% { transform: translateX(6px); opacity: 0.5; } 50% { transform: translateX(-10px); opacity: 0.35; } }
+
+/* radar sweep */
+.radar-sweep { animation: radarSpin 4.5s linear infinite; }
+@keyframes radarSpin { to { transform: rotate(360deg); } }
+
+/* pulse dot */
+.pulse-dot { animation: pulseDot 2s ease-in-out infinite; }
+@keyframes pulseDot { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* bg crossfade */
+@keyframes bgFade { from { opacity: 0; } to { opacity: 1; } }
+
+/* view transition */
+@keyframes viewFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* hero entrance */
+@keyframes heroRise { 0% { opacity: 0; transform: translateY(18px); } 100% { opacity: 1; transform: translateY(0); } }
+
+/* ---- motion kill switch ---- */
+body[data-noanim="1"] .sun-rays,
+body[data-noanim="1"] .sun-glow,
+body[data-noanim="1"] .twinkle,
+body[data-noanim="1"] .raindrop,
+body[data-noanim="1"] .snow-sway-a,
+body[data-noanim="1"] .snow-sway-b,
+body[data-noanim="1"] .drift-a,
+body[data-noanim="1"] .drift-b,
+body[data-noanim="1"] .float-slow,
+body[data-noanim="1"] .lightning,
+body[data-noanim="1"] .fog-a,
+body[data-noanim="1"] .fog-b,
+body[data-noanim="1"] .radar-sweep,
+body[data-noanim="1"] .pulse-dot {
+  animation: none !important;
+}
+
+/* range input */
+input[type="range"] { -webkit-appearance: none; height: 6px; border-radius: 3px; background: rgba(120,130,160,0.25); outline: none; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 9px; background: #fff; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+
+/* prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
