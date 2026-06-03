@@ -10,6 +10,7 @@ interface TopBarProps {
   onLocation: () => void
   onBell: () => void
   onUnitToggle: () => void
+  onShare: () => void
 }
 
 function iconBtnStyle(t: ReturnType<typeof toneStyles>) {
@@ -30,7 +31,7 @@ function iconBtnStyle(t: ReturnType<typeof toneStyles>) {
   }
 }
 
-export default function TopBar({ city, tone, accent, unit, onLocation, onBell, onUnitToggle }: TopBarProps) {
+export default function TopBar({ city, tone, accent, unit, onLocation, onBell, onUnitToggle, onShare }: TopBarProps) {
   const t = toneStyles(tone)
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '2px 2px 4px' }}>
@@ -82,6 +83,16 @@ export default function TopBar({ city, tone, accent, unit, onLocation, onBell, o
           </button>
         ))}
       </div>
+
+      {/* Share */}
+      <button
+        onClick={onShare}
+        className="press"
+        style={iconBtnStyle(t)}
+        aria-label="Share current weather"
+      >
+        <Icon name="share" size={20} stroke={2.2} aria-hidden="true" />
+      </button>
 
       {/* Bell / alerts */}
       <button

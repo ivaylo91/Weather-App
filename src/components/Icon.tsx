@@ -40,6 +40,9 @@ export default function Icon({ name, size = 22, stroke = 2, fill = 'none', class
     grip: <><circle cx="9" cy="7" r="1.1" fill="currentColor" stroke="none" /><circle cx="9" cy="12" r="1.1" fill="currentColor" stroke="none" /><circle cx="9" cy="17" r="1.1" fill="currentColor" stroke="none" /><circle cx="15" cy="7" r="1.1" fill="currentColor" stroke="none" /><circle cx="15" cy="12" r="1.1" fill="currentColor" stroke="none" /><circle cx="15" cy="17" r="1.1" fill="currentColor" stroke="none" /></>,
     layers: <><path d="M12 3 3 8l9 5 9-5-9-5Z" {...p} /><path d="M3 13l9 5 9-5" {...p} /></>,
     check: <><path d="M5 12l5 5 9-11" {...p} /></>,
+    share: <><path d="M12 2v12M8 6l4-4 4 4" {...p}/><path d="M4 13v5a2 2 0 002 2h12a2 2 0 002-2v-5" {...p}/></>,
+    moon:  <><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" {...p}/></>,
+    sun:   <><circle cx="12" cy="12" r="4" {...p}/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4" {...p}/></>,
   }
   const content = paths[name]
   if (!content) return null

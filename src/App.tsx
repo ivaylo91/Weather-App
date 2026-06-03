@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } fro
 import { useQuery } from '@tanstack/react-query'
 import { skyFor, toneStyles, THEMES } from './utils/sky'
 import { fetchCityData, fetchAlerts, reverseGeocode } from './api/weather'
-import type { StaticCity, CityData, Unit, WeatherTone } from './types'
+import type { StaticCity, CityData, Unit, WeatherTone, WeatherCondition } from './types'
+import { CONDITIONS } from './utils/sky'
+import { conv } from './utils/temperature'
 import Onboarding from './components/Onboarding'
 import TopBar from './components/TopBar'
 import PillNav from './components/PillNav'
@@ -66,6 +68,10 @@ export default function App() {
   const [savedCities, setSavedCities] = useState<StaticCity[]>(() => LS.get('savedCities', PRESET_CITIES))
   const [alertOpen, setAlertOpen] = useState(false)
   const [motionOff, setMotionOff] = useState(false)
+  type ToneOverride = 'auto' | 'dark' | 'light'
+  const [toneOverride, setToneOverride] = useState<ToneOverride>(() => LS.get('toneOverride', 'auto'))
+  const [toast, setToast] = useState<string | null>(null)
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Location: try geolocation on mount
   useEffect(() => {
@@ -197,7 +203,7 @@ export default function App() {
 
   // Compute sky from current city condition
   const sky = useMemo(() => skyFor(city.cond, themeKey), [city.cond, themeKey])
-  const tone = sky.tone
+  const tone: WeatherTone = toneOverride === 'auto' ? sky.tone : (toneOverride as WeatherTone)
   const accent = sky.accent
 
   // Background crossfade layers
@@ -212,6 +218,7 @@ export default function App() {
   useEffect(() => { LS.set('onboarded', onboarded) }, [onboarded])
   useEffect(() => { LS.set('view', view) }, [view])
   useEffect(() => { LS.set('themeKey', themeKey) }, [themeKey])
+  useEffect(() => { LS.set('toneOverride', toneOverride) }, [toneOverride])
   useEffect(() => { LS.set('cityId', cityId) }, [cityId])
   useEffect(() => { LS.set('savedCities', savedCities) }, [savedCities])
 
@@ -256,6 +263,27 @@ export default function App() {
     setOnboarded(true)
     if (target === 'cities') setView('cities')
   }, [])
+
+  const showToast = useCallback((msg: string) => {
+    setToast(msg)
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 2500)
+  }, [])
+
+  const handleShare = useCallback(async () => {
+    const condLabel = CONDITIONS[city.cond as WeatherCondition]?.label ?? ''
+    const text = `${city.name}: ${conv(city.temp, unit)}°${unit} ${condLabel}. H:${conv(city.hi, unit)}° L:${conv(city.lo, unit)}°`
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `Weather in ${city.name}`, text, url: window.location.href })
+      } else {
+        await navigator.clipboard.writeText(text)
+        showToast('Copied to clipboard!')
+      }
+    } catch {
+      // user cancelled
+    }
+  }, [city, unit, showToast])
 
   if (!onboarded) {
     return <Onboarding themeKey={themeKey} onDone={handleDoneOnboarding} />
@@ -313,6 +341,7 @@ export default function App() {
               onLocation={() => setView('cities')}
               onBell={() => { if (city.alert) setAlertOpen(true) }}
               onUnitToggle={toggleUnit}
+              onShare={handleShare}
             />
           )}
 
@@ -338,6 +367,21 @@ export default function App() {
                 </button>
               )
             })}
+            <button
+              onClick={() => setToneOverride(o => o === 'auto' ? 'dark' : o === 'dark' ? 'light' : 'auto')}
+              className="press"
+              aria-label={`Brightness: ${toneOverride}`}
+              style={{
+                flexShrink: 0, padding: '5px 10px', borderRadius: 12,
+                border: toneOverride !== 'auto' ? `1.5px solid ${accent}` : `1px solid ${t.cardBorder}`,
+                background: toneOverride !== 'auto' ? t.cardBg : 'transparent',
+                color: t.text, cursor: 'pointer',
+                backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+                fontSize: 11.5, fontWeight: 700,
+              }}
+            >
+              {toneOverride === 'dark' ? '🌙 Dark' : toneOverride === 'light' ? '☀️ Light' : '🌓 Auto'}
+            </button>
             <button onClick={() => setMotionOff(v => !v)} className="press" style={{
               flexShrink: 0, padding: '5px 10px', borderRadius: 12,
               border: `1px solid ${t.cardBorder}`,
@@ -373,6 +417,19 @@ export default function App() {
           onEnableNotif={requestNotifPermission}
           onClose={() => setAlertOpen(false)}
         />
+      )}
+
+      {/* Share / copy toast */}
+      {toast && (
+        <div aria-live="polite" style={{
+          position: 'fixed', bottom: 88, left: '50%', transform: 'translateX(-50%)',
+          background: 'rgba(15,22,40,0.92)', color: '#fff', borderRadius: 14,
+          padding: '10px 20px', fontSize: 13.5, fontWeight: 700, zIndex: 100,
+          whiteSpace: 'nowrap', backdropFilter: 'blur(12px)',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+        }}>
+          {toast}
+        </div>
       )}
     </>
   )
