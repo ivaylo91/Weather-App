@@ -217,6 +217,72 @@ export async function fetchCitySuggestions(query: string): Promise<CitySuggestio
   return data.results ?? []
 }
 
+// ---- NWS Weather Alerts (US only) ----
+export interface FetchedAlert {
+  kind: string
+  sev: 'Extreme' | 'Severe' | 'Moderate'
+  until: string
+  text: string
+}
+
+export async function fetchAlerts(lat: number, lon: number): Promise<FetchedAlert | null> {
+  try {
+    const res = await fetch(
+      `https://api.weather.gov/alerts/active?point=${lat.toFixed(4)},${lon.toFixed(4)}`,
+      { headers: { 'User-Agent': 'SoraWeatherApp/1.0 (weather-app)' } }
+    )
+    if (!res.ok) return null
+    const data = await res.json()
+    const features: unknown[] = data.features ?? []
+    if (!features.length) return null
+
+    const p = (features[0] as { properties: Record<string, string> }).properties
+    const rawSev = p.severity ?? 'Minor'
+    const sev: 'Extreme' | 'Severe' | 'Moderate' =
+      rawSev === 'Extreme' ? 'Extreme' : rawSev === 'Severe' ? 'Severe' : 'Moderate'
+
+    const expires = p.expires ? new Date(p.expires) : null
+    const until = expires
+      ? expires.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+      : 'Further notice'
+
+    const raw = p.description || p.headline || 'Weather alert in effect.'
+    const text = raw.replace(/\n{2,}/g, ' ').replace(/\n/g, ' ').slice(0, 280)
+
+    return { kind: p.event || 'Weather Alert', sev, until, text }
+  } catch {
+    return null
+  }
+}
+
+// ---- RainViewer Radar ----
+export interface RadarFrame {
+  time: number
+  path: string
+}
+
+export interface RadarData {
+  host: string
+  past: RadarFrame[]
+  nowcast: RadarFrame[]
+}
+
+export async function fetchRadarData(): Promise<RadarData | null> {
+  try {
+    const res = await fetch('https://api.rainviewer.com/public/weather-maps.json')
+    if (!res.ok) return null
+    const data = await res.json()
+    return {
+      host: data.host as string,
+      past: (data.radar?.past ?? []) as RadarFrame[],
+      nowcast: (data.radar?.nowcast ?? []) as RadarFrame[],
+    }
+  } catch {
+    return null
+  }
+}
+
+// ---- Reverse geocoding ----
 export async function reverseGeocode(lat: number, lon: number): Promise<{ city: string; region: string }> {
   try {
     const res = await fetch(

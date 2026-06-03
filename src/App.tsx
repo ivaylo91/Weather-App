@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { skyFor, toneStyles, THEMES } from './utils/sky'
-import { fetchCityData, reverseGeocode } from './api/weather'
+import { fetchCityData, fetchAlerts, reverseGeocode } from './api/weather'
 import type { StaticCity, CityData, Unit } from './types'
 import Onboarding from './components/Onboarding'
 import TopBar from './components/TopBar'
@@ -103,12 +103,33 @@ export default function App() {
       currentStaticCity.region,
       currentStaticCity.id,
     ),
-    staleTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 10,
   })
+
+  // Fetch NWS alerts (US-only; silently returns null for non-US)
+  const { data: alertData } = useQuery({
+    queryKey: ['alerts', currentStaticCity.latitude, currentStaticCity.longitude],
+    queryFn: () => fetchAlerts(currentStaticCity.latitude, currentStaticCity.longitude),
+    staleTime: 1000 * 60 * 15,
+    retry: 0,
+  })
+
+  // Notification permission state
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>(() =>
+    typeof Notification !== 'undefined' ? Notification.permission : 'denied'
+  )
+  const lastAlertKeyRef = useRef<string | null>(null)
+
+  const requestNotifPermission = useCallback(async () => {
+    if (typeof Notification === 'undefined') return
+    const p = await Notification.requestPermission()
+    setNotifPermission(p)
+  }, [])
 
   // Merge: live data overrides static where available
   const city: CityData = useMemo<CityData>(() => {
-    if (cityData) return cityData
+    const alert = alertData ?? null
+    if (cityData) return { ...cityData, alert }
     // Fallback: construct a minimal CityData from static city
     const sc = currentStaticCity
     return {
@@ -138,13 +159,27 @@ export default function App() {
         aqi: 25,
         aqiLabel: 'Good',
       },
-      alert: null,
+      alert: alertData ?? null,
       hourly: [],
       daily: [],
       latitude: sc.latitude,
       longitude: sc.longitude,
     }
-  }, [cityData, currentStaticCity])
+  }, [cityData, currentStaticCity, alertData])
+
+  // Show browser notification when a new alert is detected
+  useEffect(() => {
+    if (!city.alert) return
+    const key = city.alert.kind + city.alert.until
+    if (key === lastAlertKeyRef.current) return
+    lastAlertKeyRef.current = key
+    if (notifPermission === 'granted') {
+      new Notification(`⚠️ ${city.alert.kind}`, {
+        body: city.alert.text.slice(0, 150),
+        icon: '/pwa-192.png',
+      })
+    }
+  }, [city.alert, notifPermission])
 
   // Compute sky from current city condition
   const sky = useMemo(() => skyFor(city.cond, themeKey), [city.cond, themeKey])
@@ -316,6 +351,8 @@ export default function App() {
           city={city}
           tone={tone}
           accent={accent}
+          notifPermission={notifPermission}
+          onEnableNotif={requestNotifPermission}
           onClose={() => setAlertOpen(false)}
         />
       )}
