@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { WeatherTone, StaticCity, CitySuggestion, Unit, CityData } from '../types'
-import { useT } from '../i18n/LocaleContext'
+import { useT, useLocale } from '../i18n/LocaleContext'
 import { toneStyles, skyFor } from '../utils/sky'
 import { conv } from '../utils/temperature'
 import { fetchCitySuggestions } from '../api/weather'
@@ -100,6 +100,7 @@ interface CitiesViewProps {
 export default function CitiesView({ cities, currentId, themeKey, tone, accent, unit, onSelect, onRemove, onSearch }: CitiesViewProps) {
   const t = toneStyles(tone)
   const tr = useT()
+  const { locale } = useLocale()
   const [q, setQ] = useState('')
   const [suggestions, setSuggestions] = useState<CitySuggestion[]>([])
   const [searching, setSearching] = useState(false)
@@ -109,7 +110,7 @@ export default function CitiesView({ cities, currentId, themeKey, tone, accent, 
     if (val.trim().length < 2) { setSuggestions([]); return }
     setSearching(true)
     try {
-      setSuggestions(await fetchCitySuggestions(val))
+      setSuggestions(await fetchCitySuggestions(val, locale))
     } catch {
       setSuggestions([])
     } finally {

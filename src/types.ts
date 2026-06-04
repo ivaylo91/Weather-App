@@ -40,8 +40,10 @@ export interface CityDetails {
   pressure: number
   visibility: number
   dew: number
-  sunriseT: string
+  sunriseT: string   // 12h formatted (legacy, used when timeISO unavailable)
   sunsetT: string
+  sunriseISO: string // raw ISO — components format per locale
+  sunsetISO: string
   aqi: number
   aqiLabel: string
 }
@@ -58,6 +60,7 @@ export interface CityData {
   sunrise: number
   sunset: number
   det: CityDetails
+  timeISO: string          // raw local ISO time — components format per locale
   alerts: WeatherAlert[]   // ordered most-severe first
   hourly: HourlyPoint[]
   daily: DailyDay[]

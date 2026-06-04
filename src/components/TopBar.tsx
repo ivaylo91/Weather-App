@@ -1,5 +1,7 @@
 import type { WeatherTone, CityData } from '../types'
 import { toneStyles } from '../utils/sky'
+import { useLocale } from '../i18n/LocaleContext'
+import { formatLocalTime } from '../utils/temperature'
 import Icon from './Icon'
 
 interface TopBarProps {
@@ -24,6 +26,8 @@ function iconBtnStyle(t: ReturnType<typeof toneStyles>) {
 
 export default function TopBar({ city, tone, onLocation, onBell, onSettings }: TopBarProps) {
   const t = toneStyles(tone)
+  const { locale } = useLocale()
+  const displayTime = formatLocalTime(city.timeISO, city.time, locale)
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '2px 2px 4px' }}>
       {/* Location button */}
@@ -41,7 +45,7 @@ export default function TopBar({ city, tone, onLocation, onBell, onSettings }: T
             </span>
             <Icon name="chevronDown" size={17} stroke={2.6} style={{ flexShrink: 0, opacity: 0.7 }} aria-hidden="true" />
           </div>
-          <div style={{ fontSize: 12.5, color: t.dim, fontWeight: 600 }}>{city.time} · {city.region}</div>
+          <div style={{ fontSize: 12.5, color: t.dim, fontWeight: 600 }}>{displayTime} · {city.region}</div>
         </div>
       </button>
 

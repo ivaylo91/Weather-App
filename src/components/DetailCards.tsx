@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import type { WeatherTone, CityData, WindUnit } from '../types'
 import { toneStyles } from '../utils/sky'
-import { convWind, windUnitLabel } from '../utils/temperature'
-import { useT } from '../i18n/LocaleContext'
+import { convWind, windUnitLabel, formatLocalTime } from '../utils/temperature'
+import { useT, useLocale } from '../i18n/LocaleContext'
 import { Card } from './Card'
 import Icon from './Icon'
 
@@ -52,6 +52,9 @@ function parseHour(timeStr: string): number {
 
 export function SunArc({ city, tone, accent }: SunArcProps) {
   const tr = useT()
+  const { locale } = useLocale()
+  const sunriseDisplay = formatLocalTime(city.det.sunriseISO, city.det.sunriseT, locale)
+  const sunsetDisplay  = formatLocalTime(city.det.sunsetISO,  city.det.sunsetT,  locale)
   const t = toneStyles(tone)
   const cur = parseHour(city.time)
   const isNight = cur < city.sunrise || cur > city.sunset
@@ -86,11 +89,11 @@ export function SunArc({ city, tone, accent }: SunArcProps) {
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 13 }}>
         <div>
           <div style={{ color: t.dim, fontSize: 11, fontWeight: 700 }}>{tr.sun.toUpperCase()}↑</div>
-          <div style={{ fontWeight: 700 }}>{city.det.sunriseT}</div>
+          <div style={{ fontWeight: 700 }}>{sunriseDisplay}</div>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ color: t.dim, fontSize: 11, fontWeight: 700 }}>{tr.sun.toUpperCase()}↓</div>
-          <div style={{ fontWeight: 700 }}>{city.det.sunsetT}</div>
+          <div style={{ fontWeight: 700 }}>{sunsetDisplay}</div>
         </div>
       </div>
     </Card>

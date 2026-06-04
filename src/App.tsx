@@ -97,7 +97,7 @@ export default function App({ initialCity }: { initialCity?: string }) {
   useEffect(() => {
     if (!initialCity) return
     setOnboarded(true) // skip onboarding for deep-links
-    fetchCitySuggestions(initialCity).then(results => {
+    fetchCitySuggestions(initialCity, locale).then(results => {
       if (!results.length) return
       const r = results[0]
       const id = makeId(r.latitude, r.longitude)
@@ -115,7 +115,7 @@ export default function App({ initialCity }: { initialCity?: string }) {
       navigator.geolocation.getCurrentPosition(
         async pos => {
           const { latitude: lat, longitude: lon } = pos.coords
-          const { city, region } = await reverseGeocode(lat, lon)
+          const { city, region } = await reverseGeocode(lat, lon, locale)
           const id = makeId(lat, lon)
           const lc: StaticCity = {
             id,
@@ -173,10 +173,10 @@ export default function App({ initialCity }: { initialCity?: string }) {
       temp: currentStaticCity.temp,
       hi: currentStaticCity.hi,
       lo: currentStaticCity.lo,
-      time: '--:-- --',
+      time: '--:-- --', timeISO: '',
       sunrise: 6, sunset: 20,
-      det: { feels: currentStaticCity.temp, uv: 3, uvLabel: 'Moderate', wind: 10, windDir: 'N', gust: 18, humidity: 60, pressure: 1013, visibility: 14, dew: currentStaticCity.temp - 5, sunriseT: '6:00 AM', sunsetT: '8:00 PM', aqi: 25, aqiLabel: 'Good' },
-      alert: null, hourly: [], daily: [],
+      det: { feels: currentStaticCity.temp, uv: 3, uvLabel: 'Moderate', wind: 10, windDir: 'N', gust: 18, humidity: 60, pressure: 1013, visibility: 14, dew: currentStaticCity.temp - 5, sunriseT: '6:00 AM', sunsetT: '8:00 PM', sunriseISO: '', sunsetISO: '', aqi: 25, aqiLabel: 'Good' },
+      alerts: [], hourly: [], daily: [],
       latitude: currentStaticCity.latitude,
       longitude: currentStaticCity.longitude,
     },
@@ -213,8 +213,8 @@ export default function App({ initialCity }: { initialCity?: string }) {
     return {
       id: sc.id, name: sc.name, region: sc.region, cond: sc.cond,
       temp: sc.temp, hi: sc.hi, lo: sc.lo,
-      time: '--:-- --', sunrise: 6, sunset: 20,
-      det: { feels: sc.temp, uv: 3, uvLabel: 'Moderate', wind: 10, windDir: 'N', gust: 18, humidity: 60, pressure: 1013, visibility: 14, dew: sc.temp - 5, sunriseT: '6:00 AM', sunsetT: '8:00 PM', aqi: 25, aqiLabel: 'Good' },
+      time: '--:-- --', timeISO: '', sunrise: 6, sunset: 20,
+      det: { feels: sc.temp, uv: 3, uvLabel: 'Moderate', wind: 10, windDir: 'N', gust: 18, humidity: 60, pressure: 1013, visibility: 14, dew: sc.temp - 5, sunriseT: '6:00 AM', sunsetT: '8:00 PM', sunriseISO: '', sunsetISO: '', aqi: 25, aqiLabel: 'Good' },
       alerts: [], hourly: [], daily: [], latitude: sc.latitude, longitude: sc.longitude,
     }
   }, [cityData, currentStaticCity, alertData])

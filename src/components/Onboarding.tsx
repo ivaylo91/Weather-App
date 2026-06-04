@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { skyFor, toneStyles } from '../utils/sky'
 import { reverseGeocode } from '../api/weather'
-import { useT } from '../i18n/LocaleContext'
+import { useT, useLocale } from '../i18n/LocaleContext'
 import { WeatherScene } from './WeatherScene'
 import Icon from './Icon'
 
@@ -17,13 +17,14 @@ export default function Onboarding({ themeKey, onDone }: OnboardingProps) {
   const [step, setStep] = useState(0)
   const [locating, setLocating] = useState(false)
   const tr = useT()
+  const { locale } = useLocale()
 
   function handleUseLocation() {
     if (!navigator.geolocation) { onDone(); return }
     setLocating(true)
     navigator.geolocation.getCurrentPosition(
       async pos => {
-        await reverseGeocode(pos.coords.latitude, pos.coords.longitude)
+        await reverseGeocode(pos.coords.latitude, pos.coords.longitude, locale)
         onDone()
       },
       () => onDone(),

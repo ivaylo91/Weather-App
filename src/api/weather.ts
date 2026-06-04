@@ -127,7 +127,7 @@ export async function fetchCityData(
   const hi = Math.round(weather.daily?.temperature_2m_max?.[0] ?? temp + 2)
   const lo = Math.round(weather.daily?.temperature_2m_min?.[0] ?? temp - 4)
 
-  // Current local time string
+  // Current local time — stored as raw ISO so display layer can format by locale
   const currentIso: string = current.time ?? new Date().toISOString()
   const nowHour = parseInt(currentIso.split('T')[1]?.split(':')[0] ?? '12', 10)
   const nowMin = parseInt(currentIso.split('T')[1]?.split(':')[1] ?? '0', 10)
@@ -148,6 +148,8 @@ export async function fetchCityData(
     dew,
     sunriseT,
     sunsetT,
+    sunriseISO: sunriseIso,  // raw — display layer formats per locale
+    sunsetISO: sunsetIso,
     aqi,
     aqiLabel: aqiLbl,
   }
@@ -212,10 +214,11 @@ export async function fetchCityData(
     hi,
     lo,
     time: timeStr,
+    timeISO: currentIso,
     sunrise: sunriseHour,
     sunset: sunsetHour,
     det,
-    alert: null,
+    alerts: [],
     hourly,
     daily,
     latitude: lat,
@@ -223,9 +226,10 @@ export async function fetchCityData(
   }
 }
 
-export async function fetchCitySuggestions(query: string): Promise<CitySuggestion[]> {
+export async function fetchCitySuggestions(query: string, locale = 'en'): Promise<CitySuggestion[]> {
   if (query.trim().length < 2) return []
-  const res = await fetch(`${GEO_URL}?name=${encodeURIComponent(query)}&count=6&language=en&format=json${_k}`)
+  const lang = locale.slice(0, 2)  // 'bg', 'en', etc.
+  const res = await fetch(`${GEO_URL}?name=${encodeURIComponent(query)}&count=6&language=${lang}&format=json${_k}`)
   if (!res.ok) return []
   const data = await res.json()
   return data.results ?? []
@@ -306,11 +310,12 @@ export async function fetchRadarData(): Promise<RadarData | null> {
 }
 
 // ---- Reverse geocoding ----
-export async function reverseGeocode(lat: number, lon: number): Promise<{ city: string; region: string }> {
+export async function reverseGeocode(lat: number, lon: number, locale = 'en'): Promise<{ city: string; region: string }> {
+  const lang = locale.slice(0, 2)
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
-      { headers: { 'Accept-Language': 'en' } }
+      { headers: { 'Accept-Language': `${lang},en;q=0.8` } }
     )
     if (!res.ok) return { city: 'Your Location', region: '' }
     const data = await res.json()
