@@ -91,6 +91,9 @@ export interface Translations {
   condAlerts: string
   alertOnRain: string
   alertOnSnow: string
+  installTitle: string
+  installBody: string
+  install: string
 }
 
 const en: Translations = {
@@ -180,6 +183,9 @@ const en: Translations = {
   condAlerts: 'Condition alerts',
   alertOnRain: 'Notify when rain starts',
   alertOnSnow: 'Notify when snow starts',
+  installTitle: 'Add to Home Screen',
+  installBody: 'Install Sora for quick weather access',
+  install: 'Install',
 }
 
 const bg: Translations = {
@@ -269,6 +275,9 @@ const bg: Translations = {
   condAlerts: 'Известия за условия',
   alertOnRain: 'При начало на дъжд',
   alertOnSnow: 'При начало на сняг',
+  installTitle: 'Добавяне на началния екран',
+  installBody: 'Инсталирайте Sora за бърз достъп до времето',
+  install: 'Инсталиране',
 }
 
 const de: Translations = {
@@ -327,6 +336,9 @@ const de: Translations = {
   forecastDays: (n) => `${n}-Tage-Vorhersage`,
   condAlerts: 'Konditionsbenachrichtigungen', alertOnRain: 'Bei Regenbeginn benachrichtigen',
   alertOnSnow: 'Bei Schneebeginn benachrichtigen',
+  installTitle: 'Zum Startbildschirm hinzufügen',
+  installBody: 'Sora für schnellen Wetterzugang installieren',
+  install: 'Installieren',
 }
 
 const fr: Translations = {
@@ -386,6 +398,9 @@ const fr: Translations = {
   forecastDays: (n) => `Prévisions ${n} jours`,
   condAlerts: 'Alertes météo', alertOnRain: 'Notifier au début de la pluie',
   alertOnSnow: 'Notifier au début de la neige',
+  installTitle: "Ajouter à l'écran d'accueil",
+  installBody: 'Installez Sora pour un accès rapide à la météo',
+  install: 'Installer',
 }
 
 const es: Translations = {
@@ -444,6 +459,9 @@ const es: Translations = {
   forecastDays: (n) => `Pronóstico de ${n} días`,
   condAlerts: 'Alertas de condiciones', alertOnRain: 'Avisar cuando empieza la lluvia',
   alertOnSnow: 'Avisar cuando empieza la nieve',
+  installTitle: 'Añadir a la pantalla de inicio',
+  installBody: 'Instala Sora para acceso rápido al tiempo',
+  install: 'Instalar',
 }
 
 export const translations: Record<Locale, Translations> = { en, bg, de, fr, es }

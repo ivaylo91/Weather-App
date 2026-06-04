@@ -14,6 +14,7 @@ import PillNav from './components/PillNav'
 import AlertSheet from './components/AlertSheet'
 import SettingsSheet from './components/SettingsSheet'
 import ErrorBoundary from './components/ErrorBoundary'
+import InstallBanner from './components/InstallBanner'
 
 const TodayView    = lazy(() => import('./views/TodayView'))
 const ForecastView = lazy(() => import('./views/ForecastView'))
@@ -77,6 +78,10 @@ export default function App({ initialCity }: { initialCity?: string }) {
   const [alertOpen, setAlertOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [motionOff, setMotionOff] = useState(false)
+  // Install banner (beforeinstallprompt — Chrome/Android only)
+  type BeforeInstallPromptEvent = Event & { prompt(): Promise<void>; userChoice: Promise<{ outcome: string }> }
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
+  const [showInstall, setShowInstall] = useState(false)
   const [locale, setLocale] = useState<Locale>(() => LS.get('locale', 'en'))
   // Pull-to-refresh
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -191,7 +196,9 @@ export default function App({ initialCity }: { initialCity?: string }) {
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>(() =>
     typeof Notification !== 'undefined' ? Notification.permission : 'denied'
   )
-  const lastAlertKeyRef = useRef<string | null>(null)
+  // Use localStorage so "notify on app open" works across sessions
+  const getLastAlertKey = () => localStorage.getItem('sora_last_alert_key')
+  const setLastAlertKey = (k: string) => localStorage.setItem('sora_last_alert_key', k)
 
   const requestNotifPermission = useCallback(async () => {
     if (typeof Notification === 'undefined') return
@@ -212,12 +219,12 @@ export default function App({ initialCity }: { initialCity?: string }) {
     }
   }, [cityData, currentStaticCity, alertData])
 
-  // Show browser notification when a new alert is detected
+  // Notify on app open + on new alert — persisted across sessions via localStorage
   useEffect(() => {
     if (!city.alert) return
     const key = city.alert.kind + city.alert.until
-    if (key === lastAlertKeyRef.current) return
-    lastAlertKeyRef.current = key
+    if (key === getLastAlertKey()) return
+    setLastAlertKey(key)
     if (notifPermission === 'granted') {
       new Notification(`⚠️ ${city.alert.kind}`, {
         body: city.alert.text.slice(0, 150),
@@ -284,6 +291,32 @@ export default function App({ initialCity }: { initialCity?: string }) {
     document.addEventListener('visibilitychange', onVisibility)
     return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [queryClient])
+
+  // PWA install banner — capture beforeinstallprompt, show after 10 s
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault()
+      setInstallPrompt(e as BeforeInstallPromptEvent)
+      if (!localStorage.getItem('sora_install_dismissed')) {
+        setTimeout(() => setShowInstall(true), 10_000)
+      }
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [])
+
+  async function handleInstall() {
+    if (!installPrompt) return
+    await installPrompt.prompt()
+    const { outcome } = await installPrompt.userChoice
+    if (outcome === 'accepted') setShowInstall(false)
+    setInstallPrompt(null)
+  }
+
+  function dismissInstall() {
+    setShowInstall(false)
+    localStorage.setItem('sora_install_dismissed', '1')
+  }
 
   // Handlers
   const handleSelectCity = useCallback((id: string) => {
@@ -508,6 +541,16 @@ export default function App({ initialCity }: { initialCity?: string }) {
           alertOnSnow={alertOnSnow}
           onToggleRainAlert={() => setAlertOnRain(v => !v)}
           onToggleSnowAlert={() => setAlertOnSnow(v => !v)}
+        />
+      )}
+
+      {/* PWA install banner */}
+      {showInstall && installPrompt && (
+        <InstallBanner
+          tone={tone}
+          accent={accent}
+          onInstall={handleInstall}
+          onDismiss={dismissInstall}
         />
       )}
 

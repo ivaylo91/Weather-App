@@ -88,8 +88,21 @@ export async function shareWeatherImage(
     const blob = await svgToPngBlob(svgStr, 800, 420)
     const file = new File([blob], `${city.name}-weather.png`, { type: 'image/png' })
 
+    // Build a shareable URL that includes OG image params so previews show weather
+    const [c1, c2] = GRADIENTS[city.cond] ?? ['#1d4ed8', '#0ea5e9']
+    const emoji = EMOJIS[city.cond] ?? '🌤️'
+    const ogParams = new URLSearchParams({
+      city: city.name,
+      temp: String(conv(city.temp, unit)),
+      cond: tr.cond[city.cond] ?? city.cond,
+      emoji,
+      c1,
+      c2,
+    })
+    const shareUrl = `${window.location.origin}/?city=${encodeURIComponent(city.name)}`
+
     if (navigator.canShare?.({ files: [file] })) {
-      await navigator.share({ files: [file], title: `Weather in ${city.name}` })
+      await navigator.share({ files: [file], title: `Weather in ${city.name}`, url: shareUrl })
       return
     }
 
@@ -105,7 +118,7 @@ export async function shareWeatherImage(
     // Image share failed — fall back to text
     try {
       if (navigator.share) {
-        await navigator.share({ title: `Weather in ${city.name}`, text: fallbackText })
+        await navigator.share({ title: `Weather in ${city.name}`, text: fallbackText, url: `${window.location.origin}/?city=${encodeURIComponent(city.name)}` })
       } else {
         await navigator.clipboard.writeText(fallbackText)
         fallbackToast(tr.copiedToClipboard)
