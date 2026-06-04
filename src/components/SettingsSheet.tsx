@@ -26,6 +26,7 @@ interface SettingsSheetProps {
   alertOnSnow: boolean
   onToggleRainAlert: () => void
   onToggleSnowAlert: () => void
+  apiOk: boolean
 }
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
@@ -62,7 +63,7 @@ export default function SettingsSheet({
   tone, accent, unit, windUnit, themeKey, toneOverride, motionOff,
   alertOnRain, alertOnSnow,
   onUnitToggle, onWindUnit, onTheme, onToneOverride, onMotionToggle, onShare, onClose,
-  onToggleRainAlert, onToggleSnowAlert,
+  onToggleRainAlert, onToggleSnowAlert, apiOk,
 }: SettingsSheetProps) {
   const tr = useT()
   const { locale, setLocale } = useLocale()
@@ -213,6 +214,12 @@ export default function SettingsSheet({
               ))}
             </Row>
           )}
+
+          {/* API status */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 16, background: rowBg }}>
+            <div style={{ width: 9, height: 9, borderRadius: 5, background: apiOk ? '#34c759' : '#ff3b30', flexShrink: 0 }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: fg, opacity: 0.8 }}>{apiOk ? tr.apiOk : tr.apiError}</span>
+          </div>
 
           {/* Share */}
           <button

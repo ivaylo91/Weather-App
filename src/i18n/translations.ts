@@ -22,7 +22,7 @@ export interface Translations {
   sun: string
   // Computed sub-texts
   gusts: (g: number, u: string) => string
-  dewPoint: (d: number) => string
+  dewPoint: (d: number, u: string) => string
   forecastDays: (n: number) => string
   uv: (n: number) => string
   aqi: (n: number) => string
@@ -94,6 +94,8 @@ export interface Translations {
   installTitle: string
   installBody: string
   install: string
+  apiOk: string
+  apiError: string
 }
 
 const en: Translations = {
@@ -118,7 +120,7 @@ const en: Translations = {
   airQuality: 'Air quality',
   sun: 'Sun',
   gusts: (g, u) => `Gusts ${g} ${u}`,
-  dewPoint: (d) => `Dew point ${d}°`,
+  dewPoint: (d, u) => `Dew point ${d}°${u}`,
   forecastDays: (n) => `${n}-day forecast`,
   uv: (n) => n <= 2 ? 'Low' : n <= 5 ? 'Moderate' : n <= 7 ? 'High' : n <= 10 ? 'Very High' : 'Extreme',
   aqi: (n) => n <= 20 ? 'Good' : n <= 40 ? 'Fair' : n <= 60 ? 'Moderate' : n <= 80 ? 'Poor' : n <= 100 ? 'Very Poor' : 'Extremely Poor',
@@ -186,6 +188,8 @@ const en: Translations = {
   installTitle: 'Add to Home Screen',
   installBody: 'Install Sora for quick weather access',
   install: 'Install',
+  apiOk: 'Weather data: connected',
+  apiError: 'Weather data: offline',
 }
 
 const bg: Translations = {
@@ -210,7 +214,7 @@ const bg: Translations = {
   airQuality: 'Кач. въздух',
   sun: 'Слънце',
   gusts: (g, u) => `Пориви ${g} ${u}`,
-  dewPoint: (d) => `Точка на орос. ${d}°`,
+  dewPoint: (d, u) => `Точка на орос. ${d}°${u}`,
   forecastDays: (n) => `${n}-дневна прогноза`,
   uv: (n) => n <= 2 ? 'Ниски' : n <= 5 ? 'Умерени' : n <= 7 ? 'Високи' : n <= 10 ? 'Много високи' : 'Екстремни',
   aqi: (n) => n <= 20 ? 'Добро' : n <= 40 ? 'Задоволително' : n <= 60 ? 'Умерено' : n <= 80 ? 'Лошо' : n <= 100 ? 'Много лошо' : 'Изкл. лошо',
@@ -278,6 +282,8 @@ const bg: Translations = {
   installTitle: 'Добавяне на началния екран',
   installBody: 'Инсталирайте Sora за бърз достъп до времето',
   install: 'Инсталиране',
+  apiOk: 'Данни: свързан',
+  apiError: 'Данни: офлайн',
 }
 
 const de: Translations = {
@@ -295,7 +301,7 @@ const de: Translations = {
   uvIndex: 'UV-Index', visibility: 'Sichtweite', pressure: 'Luftdruck',
   airQuality: 'Luftqualität', sun: 'Sonne',
   gusts: (g, u) => `Böen ${g} ${u}`,
-  dewPoint: (d) => `Taupunkt ${d}°`,
+  dewPoint: (d, u) => `Taupunkt ${d}°${u}`,
   uv: (n) => n <= 2 ? 'Gering' : n <= 5 ? 'Mäßig' : n <= 7 ? 'Hoch' : n <= 10 ? 'Sehr hoch' : 'Extrem',
   aqi: (n) => n <= 20 ? 'Gut' : n <= 40 ? 'Mäßig' : n <= 60 ? 'Mittel' : n <= 80 ? 'Schlecht' : n <= 100 ? 'Sehr schlecht' : 'Extrem schlecht',
   feelsLikeSub: (f, a) => f > a ? 'Wärmer als tatsächlich' : f < a ? 'Kälter als tatsächlich' : 'Wie tatsächlich',
@@ -339,6 +345,8 @@ const de: Translations = {
   installTitle: 'Zum Startbildschirm hinzufügen',
   installBody: 'Sora für schnellen Wetterzugang installieren',
   install: 'Installieren',
+  apiOk: 'Wetterdaten: verbunden',
+  apiError: 'Wetterdaten: offline',
 }
 
 const fr: Translations = {
@@ -356,7 +364,7 @@ const fr: Translations = {
   uvIndex: 'Indice UV', visibility: 'Visibilité', pressure: 'Pression',
   airQuality: "Qualité de l'air", sun: 'Soleil',
   gusts: (g, u) => `Rafales ${g} ${u}`,
-  dewPoint: (d) => `Point de rosée ${d}°`,
+  dewPoint: (d, u) => `Point de rosée ${d}°${u}`,
   uv: (n) => n <= 2 ? 'Faible' : n <= 5 ? 'Modéré' : n <= 7 ? 'Élevé' : n <= 10 ? 'Très élevé' : 'Extrême',
   aqi: (n) => n <= 20 ? 'Bon' : n <= 40 ? 'Acceptable' : n <= 60 ? 'Modéré' : n <= 80 ? 'Mauvais' : n <= 100 ? 'Très mauvais' : 'Dangereux',
   feelsLikeSub: (f, a) => f > a ? 'Plus chaud que réel' : f < a ? 'Plus froid que réel' : 'Comme la réalité',
@@ -401,6 +409,8 @@ const fr: Translations = {
   installTitle: "Ajouter à l'écran d'accueil",
   installBody: 'Installez Sora pour un accès rapide à la météo',
   install: 'Installer',
+  apiOk: 'Données météo : connecté',
+  apiError: 'Données météo : hors ligne',
 }
 
 const es: Translations = {
@@ -418,7 +428,7 @@ const es: Translations = {
   uvIndex: 'Índice UV', visibility: 'Visibilidad', pressure: 'Presión',
   airQuality: 'Calidad del aire', sun: 'Sol',
   gusts: (g, u) => `Ráfagas ${g} ${u}`,
-  dewPoint: (d) => `Punto de rocío ${d}°`,
+  dewPoint: (d, u) => `Punto de rocío ${d}°${u}`,
   uv: (n) => n <= 2 ? 'Bajo' : n <= 5 ? 'Moderado' : n <= 7 ? 'Alto' : n <= 10 ? 'Muy alto' : 'Extremo',
   aqi: (n) => n <= 20 ? 'Buena' : n <= 40 ? 'Aceptable' : n <= 60 ? 'Moderada' : n <= 80 ? 'Mala' : n <= 100 ? 'Muy mala' : 'Pésima',
   feelsLikeSub: (f, a) => f > a ? 'Más cálido que el real' : f < a ? 'Más frío que el real' : 'Igual al real',
@@ -462,6 +472,8 @@ const es: Translations = {
   installTitle: 'Añadir a la pantalla de inicio',
   installBody: 'Instala Sora para acceso rápido al tiempo',
   install: 'Instalar',
+  apiOk: 'Datos meteorológicos: conectado',
+  apiError: 'Datos meteorológicos: sin conexión',
 }
 
 export const translations: Record<Locale, Translations> = { en, bg, de, fr, es }

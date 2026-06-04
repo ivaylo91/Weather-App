@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon-32.png', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Weather App',
-        short_name: 'Weather',
-        description: 'Real-time weather with hourly forecasts and air quality',
+        name: 'Sora Weather',
+        short_name: 'Sora',
+        description: 'Real-time weather with sky-driven design, hourly forecasts and air quality',
         theme_color: '#1d4ed8',
         background_color: '#1e3a8a',
         display: 'standalone',

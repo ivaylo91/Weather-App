@@ -159,7 +159,7 @@ export default function TodayView({ city, tone, accent, sky, unit, isLoading, is
             value={`${conv(d.feels, unit)}°`}
             sub={tr.feelsLikeSub(d.feels, city.temp)}
           />
-          <DetailCard tone={tone} accent={accent} icon="drop" label={tr.humidity} value={d.humidity} unit="%" sub={tr.dewPoint(conv(d.dew, unit))} />
+          <DetailCard tone={tone} accent={accent} icon="drop" label={tr.humidity} value={d.humidity} unit="%" sub={tr.dewPoint(conv(d.dew, unit), unit)} />
           <DetailCard tone={tone} accent={accent} icon="eye" label={tr.visibility} value={d.visibility} unit="km" sub={tr.visibilitySub(d.visibility)} />
           <DetailCard tone={tone} accent={accent} icon="gauge" label={tr.pressure} value={d.pressure} unit="hPa" sub={tr.pressureSub(d.pressure)} />
           <DetailCard tone={tone} accent={accent} icon="leaf" label={tr.airQuality} value={d.aqi} sub={tr.aqi(d.aqi)} />

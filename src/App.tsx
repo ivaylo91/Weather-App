@@ -52,11 +52,9 @@ const LS = {
 
 // ---- Preset cities ----
 const PRESET_CITIES: StaticCity[] = [
-  { id: 'sf',  name: 'San Francisco', region: 'California, US',  cond: 'partly-cloudy-day', temp: 17, hi: 19, lo: 12, latitude: 37.7749,  longitude: -122.4194 },
-  { id: 'phx', name: 'Phoenix',        region: 'Arizona, US',     cond: 'clear-day',         temp: 39, hi: 41, lo: 27, latitude: 33.4484,  longitude: -112.0740 },
-  { id: 'tok', name: 'Tokyo',          region: 'Japan',           cond: 'rain',              temp: 14, hi: 16, lo: 11, latitude: 35.6762,  longitude: 139.6503 },
-  { id: 'lon', name: 'London',         region: 'United Kingdom',  cond: 'cloudy',            temp: 9,  hi: 12, lo: 6,  latitude: 51.5074,  longitude: -0.1278  },
-  { id: 'syd', name: 'Sydney',         region: 'Australia',       cond: 'clear-night',       temp: 19, hi: 22, lo: 15, latitude: -33.8688, longitude: 151.2093 },
+  { id: 'sf',  name: 'San Francisco', region: 'California, US', cond: 'partly-cloudy-day', temp: 17, hi: 19, lo: 12, latitude: 37.7749,  longitude: -122.4194 },
+  { id: 'tok', name: 'Tokyo',         region: 'Japan',          cond: 'partly-cloudy-day', temp: 14, hi: 16, lo: 11, latitude: 35.6762,  longitude: 139.6503 },
+  { id: 'lon', name: 'London',        region: 'United Kingdom', cond: 'partly-cloudy-day', temp: 9,  hi: 12, lo: 6,  latitude: 51.5074,  longitude: -0.1278  },
 ]
 
 function makeId(lat: number, lon: number): string {
@@ -540,6 +538,7 @@ export default function App({ initialCity }: { initialCity?: string }) {
           alertOnSnow={alertOnSnow}
           onToggleRainAlert={() => setAlertOnRain(v => !v)}
           onToggleSnowAlert={() => setAlertOnSnow(v => !v)}
+          apiOk={!cityError}
         />
       )}
 
