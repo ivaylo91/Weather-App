@@ -226,9 +226,16 @@ export async function fetchCityData(
   }
 }
 
+// Allowlisted language codes accepted by the geocoding API
+const VALID_LANGS = new Set(['en', 'bg', 'de', 'fr', 'es', 'it', 'pt', 'ru', 'tr', 'ar', 'zh'])
+function safeLang(locale: string): string {
+  const l = locale.slice(0, 2).toLowerCase()
+  return VALID_LANGS.has(l) ? l : 'en'
+}
+
 export async function fetchCitySuggestions(query: string, locale = 'en'): Promise<CitySuggestion[]> {
   if (query.trim().length < 2) return []
-  const lang = locale.slice(0, 2)  // 'bg', 'en', etc.
+  const lang = safeLang(locale)
   const res = await fetch(`${GEO_URL}?name=${encodeURIComponent(query)}&count=6&language=${lang}&format=json${_k}`)
   if (!res.ok) return []
   const data = await res.json()
@@ -311,7 +318,7 @@ export async function fetchRadarData(): Promise<RadarData | null> {
 
 // ---- Reverse geocoding ----
 export async function reverseGeocode(lat: number, lon: number, locale = 'en'): Promise<{ city: string; region: string }> {
-  const lang = locale.slice(0, 2)
+  const lang = safeLang(locale)
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,

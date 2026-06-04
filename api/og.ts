@@ -21,15 +21,37 @@ function safeEmoji(raw: string | null): string {
   try { return decodeURIComponent(raw) } catch { return '🌤️' }
 }
 
+// Allow only valid CSS hex colors (#rgb / #rrggbb) or oklch values.
+// Rejects anything else to prevent CSS injection.
+const CSS_COLOR_RE = /^(#[0-9a-fA-F]{3,8}|oklch\([\d.\s%]+\))$/
+function safeColor(raw: string | null, fallback: string): string {
+  if (!raw) return fallback
+  const trimmed = raw.trim()
+  return CSS_COLOR_RE.test(trimmed) ? trimmed : fallback
+}
+
+// Strip any characters outside printable Unicode (prevent header/log injection)
+function safeText(raw: string | null, fallback: string, maxLen = 60): string {
+  if (!raw) return fallback
+  return raw.replace(/[\x00-\x1F\x7F]/g, '').slice(0, maxLen) || fallback
+}
+
+// Numeric temperature: only digits and optional leading minus
+function safeTemp(raw: string | null): string {
+  if (!raw) return ''
+  const match = raw.match(/^-?\d{1,3}$/)
+  return match ? match[0] : ''
+}
+
 export default function handler(request: Request): ImageResponse {
   const { searchParams } = new URL(request.url)
 
-  const city  = searchParams.get('city')  ?? 'Времето днес'
-  const temp  = searchParams.get('temp')  ?? ''
-  const cond  = searchParams.get('cond')  ?? 'Прогноза на времето'
+  const city  = safeText(searchParams.get('city'), 'Времето днес')
+  const temp  = safeTemp(searchParams.get('temp'))
+  const cond  = safeText(searchParams.get('cond'), 'Прогноза на времето')
   const emoji = safeEmoji(searchParams.get('emoji'))
-  const c1    = searchParams.get('c1')    ?? '#1d4ed8'
-  const c2    = searchParams.get('c2')    ?? '#0ea5e9'
+  const c1    = safeColor(searchParams.get('c1'), '#1d4ed8')
+  const c2    = safeColor(searchParams.get('c2'), '#0ea5e9')
 
   return new ImageResponse(
     React.createElement('div', {
