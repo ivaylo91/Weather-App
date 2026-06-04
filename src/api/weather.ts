@@ -319,13 +319,14 @@ export async function reverseGeocode(lat: number, lon: number, locale = 'en'): P
     )
     if (!res.ok) return { city: 'Your Location', region: '' }
     const data = await res.json()
-    const city = data.address?.city || data.address?.town || data.address?.village || data.address?.county || 'Your Location'
+    const fallbackName = lang === 'bg' ? 'Вашето местоположение' : 'Your Location'
+    const city = data.address?.city || data.address?.town || data.address?.village || data.address?.county || fallbackName
     const state = data.address?.state || ''
     const country = data.address?.country || ''
     const region = [state, country].filter(Boolean).join(', ')
     return { city, region }
   } catch {
-    return { city: 'Your Location', region: '' }
+    return { city: lang === 'bg' ? 'Вашето местоположение' : 'Your Location', region: '' }
   }
 }
 

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { WeatherTone } from '../types'
 import { toneStyles } from '../utils/sky'
 import { fetchMinutelyPrecip } from '../api/weather'
+import { useT } from '../i18n/LocaleContext'
 import { Card, SectionLabel } from './Card'
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 
 export default function RainBar({ lat, lon, tone }: Props) {
   const t = toneStyles(tone)
+  const tr = useT()
 
   const { data } = useQuery({
     queryKey: ['minutely', lat, lon],
@@ -29,7 +31,7 @@ export default function RainBar({ lat, lon, tone }: Props) {
   return (
     <Card tone={tone}>
       <SectionLabel tone={tone} icon="drop">
-        {hasRain ? `Rain · ${totalMM} mm in next 2 h` : 'No rain in next 2 hours'}
+        {hasRain ? tr.rainNext2h(totalMM) : tr.noRain}
       </SectionLabel>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 48 }}>
         {data.map((p, i) => {

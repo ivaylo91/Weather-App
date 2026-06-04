@@ -125,10 +125,10 @@ export default function ForecastView({ city, tone, accent, unit }: ForecastViewP
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginTop: 14 }}>
           {[
-            ['umbrella', 'Precip', `${stats.pop}%`],
-            ['wind', 'Wind', `${stats.wind}`],
-            ['drop', 'Humidity', `${stats.humidity}%`],
-            ['today', 'UV', `${stats.uv}`],
+            ['umbrella', tr.forecastPrecip, `${stats.pop}%`],
+            ['wind', tr.forecastWind, `${stats.wind}`],
+            ['drop', tr.forecastHumidity, `${stats.humidity}%`],
+            ['today', tr.forecastUV, `${stats.uv}`],
           ].map(([ic, lb, vl]) => (
             <div key={lb} style={{ textAlign: 'center', padding: '10px 4px', borderRadius: 16, background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
               <div style={{ display: 'grid', placeItems: 'center', color: accent, marginBottom: 4 }}>

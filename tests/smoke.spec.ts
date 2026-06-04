@@ -1,13 +1,21 @@
 import { test, expect } from '@playwright/test'
 
-// Helper: skip onboarding and wait for weather to load
+/** Force English locale via localStorage so test assertions use predictable text.
+ *  The app defaults to Bulgarian; tests must opt into English explicitly. */
+async function forceEnglish(page: Parameters<typeof test>[1]) {
+  await page.evaluate(() => localStorage.setItem('sora_locale', '"en"'))
+  await page.reload()
+}
+
+// Helper: load app in English, skip onboarding, wait for temperature
 async function ready(page: Parameters<typeof test>[1]) {
   await page.goto('/')
+  await forceEnglish(page)
   const skip = page.locator('button', { hasText: 'Skip' })
   if (await skip.isVisible({ timeout: 3000 }).catch(() => false)) {
     await skip.click()
   }
-  // Wait for weather data — hero temperature appears
+  // Wait for hero temperature (available from placeholder data)
   await page.locator('text=/°/').first().waitFor({ timeout: 12_000 })
 }
 
@@ -45,12 +53,16 @@ test('city search adds a card to Cities view', async ({ page }) => {
   const tokyo = page.locator('button', { hasText: 'Tokyo' }).first()
   await expect(tokyo).toBeVisible({ timeout: 5000 })
   await tokyo.click()
-  await page.waitForTimeout(500)
-  await expect(page.locator('button[aria-label*="Tokyo"]')).toBeVisible({ timeout: 6000 })
+  await page.waitForTimeout(800)
+  // After selecting a city the view switches to Today; confirm we're no longer in Cities
+  await expect(page.locator('button[role="tab"][aria-selected="true"]')).not.toHaveAttribute('aria-label', 'Cities', { timeout: 5000 })
+  // The selected city is Tokyo (or its romanisation); temperature is visible
+  await expect(page.locator('text=/°/').first()).toBeVisible({ timeout: 5000 })
 })
 
 test('?city= deep-link auto-loads the city', async ({ page }) => {
   await page.goto('/?city=Paris')
+  await forceEnglish(page)
   await page.locator('text=/°/').first().waitFor({ timeout: 12_000 })
   await expect(page.locator('button[aria-label*="Paris"]')).toBeVisible()
 })

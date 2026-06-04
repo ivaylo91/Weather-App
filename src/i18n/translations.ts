@@ -96,6 +96,12 @@ export interface Translations {
   install: string
   apiOk: string
   apiError: string
+  rainNext2h: (mm: number) => string
+  noRain: string
+  forecastPrecip: string
+  forecastWind: string
+  forecastHumidity: string
+  forecastUV: string
 }
 
 const en: Translations = {
@@ -190,6 +196,12 @@ const en: Translations = {
   install: 'Install',
   apiOk: 'Weather data: connected',
   apiError: 'Weather data: offline',
+  rainNext2h: (mm) => `Rain · ${mm} mm in next 2 h`,
+  noRain: 'No rain in next 2 hours',
+  forecastPrecip: 'Precip',
+  forecastWind: 'Wind',
+  forecastHumidity: 'Humidity',
+  forecastUV: 'UV',
 }
 
 const bg: Translations = {
@@ -284,6 +296,12 @@ const bg: Translations = {
   install: 'Инсталиране',
   apiOk: 'Данни: свързан',
   apiError: 'Данни: офлайн',
+  rainNext2h: (mm) => `Дъжд · ${mm} мм в следващите 2 ч`,
+  noRain: 'Без дъжд в следващите 2 часа',
+  forecastPrecip: 'Валеж',
+  forecastWind: 'Вятър',
+  forecastHumidity: 'Влажност',
+  forecastUV: 'УВ',
 }
 
 export const translations: Record<Locale, Translations> = { en, bg }
