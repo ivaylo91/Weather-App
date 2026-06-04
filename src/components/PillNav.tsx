@@ -19,6 +19,25 @@ export default function PillNav({ view, setView, tone, accent }: PillNavProps) {
     { id: 'radar',    label: tr.nav.radar,    icon: 'radar' },
     { id: 'cities',   label: tr.nav.cities,   icon: 'cities' },
   ]
+
+  function handleKeyDown(e: React.KeyboardEvent, currentId: string) {
+    const ids = navItems.map(i => i.id)
+    const idx = ids.indexOf(currentId)
+    let nextId: string | null = null
+    if (e.key === 'ArrowRight') { e.preventDefault(); nextId = ids[(idx + 1) % ids.length] }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); nextId = ids[(idx - 1 + ids.length) % ids.length] }
+    else if (e.key === 'Home') { e.preventDefault(); nextId = ids[0] }
+    else if (e.key === 'End') { e.preventDefault(); nextId = ids[ids.length - 1] }
+    if (nextId) {
+      setView(nextId)
+      // Move focus to the newly selected tab so subsequent arrow keys work correctly
+      setTimeout(() => {
+        const btn = document.querySelector<HTMLElement>(`[role="tab"][data-tabid="${nextId}"]`)
+        btn?.focus()
+      }, 0)
+    }
+  }
+
   return (
     <nav
       aria-label="Main navigation"
@@ -26,6 +45,7 @@ export default function PillNav({ view, setView, tone, accent }: PillNavProps) {
     >
       <div
         role="tablist"
+        aria-orientation="horizontal"
         style={{
           pointerEvents: 'auto',
           display: 'flex',
@@ -47,7 +67,10 @@ export default function PillNav({ view, setView, tone, accent }: PillNavProps) {
               role="tab"
               aria-selected={active}
               aria-label={it.label}
+              data-tabid={it.id}
+              tabIndex={active ? 0 : -1}
               onClick={() => setView(it.id)}
+              onKeyDown={e => handleKeyDown(e, it.id)}
               className="press"
               style={{
                 display: 'flex',

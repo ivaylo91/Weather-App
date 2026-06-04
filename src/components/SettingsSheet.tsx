@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import type { WeatherTone, Unit, WindUnit } from '../types'
 import { skyFor, THEMES } from '../utils/sky'
 import { windUnitLabel } from '../utils/temperature'
@@ -40,12 +41,14 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   )
 }
 
-function Pill({ active, accent, fg, onClick, children }: {
-  active: boolean; accent: string; fg: string; onClick: () => void; children: React.ReactNode
+function Pill({ active, accent, fg, onClick, children, label }: {
+  active: boolean; accent: string; fg: string; onClick: () => void; children: React.ReactNode; label?: string
 }) {
   return (
     <button
       onClick={onClick}
+      aria-pressed={active}
+      aria-label={label}
       className="press"
       style={{
         flex: 1, padding: '10px 6px', borderRadius: 14, border: 'none', cursor: 'pointer',
@@ -67,6 +70,17 @@ export default function SettingsSheet({
 }: SettingsSheetProps) {
   const tr = useT()
   const { locale, setLocale } = useLocale()
+  const closeRef = useRef<HTMLButtonElement>(null)
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [onClose])
+
+  // Move focus to close button when sheet opens
+  useEffect(() => { closeRef.current?.focus() }, [])
 
   const bg = tone === 'light' ? '#1b2540' : '#fff'
   const fg = tone === 'light' ? '#fff' : '#15243f'
@@ -91,7 +105,7 @@ export default function SettingsSheet({
             <Icon name="settings" size={20} stroke={2.2} style={{ color: accent }} />
             <span style={{ fontSize: 20, fontWeight: 800 }}>{tr.settingsTitle}</span>
           </div>
-          <button onClick={onClose} aria-label="Close settings" className="press" style={{ width: 34, height: 34, borderRadius: 17, border: 'none', background: rowBg, color: fg, cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
+          <button ref={closeRef} onClick={onClose} aria-label="Close settings" className="press" style={{ width: 34, height: 34, borderRadius: 17, border: 'none', background: rowBg, color: fg, cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
             <Icon name="close" size={17} stroke={2.4} />
           </button>
         </div>
@@ -121,7 +135,7 @@ export default function SettingsSheet({
           <Row label={tr.temperature}>
             <div style={{ display: 'flex', gap: 8 }}>
               {(['C', 'F'] as Unit[]).map(u => (
-                <Pill key={u} active={unit === u} accent={accent} fg={fg} onClick={onUnitToggle}>
+                <Pill key={u} active={unit === u} accent={accent} fg={fg} onClick={onUnitToggle} label={`Temperature ${u === 'C' ? 'Celsius' : 'Fahrenheit'}`}>
                   °{u}
                 </Pill>
               ))}

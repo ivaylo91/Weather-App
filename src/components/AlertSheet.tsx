@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import type { WeatherTone, WeatherAlert, CityData } from '../types'
 import { useT } from '../i18n/LocaleContext'
 import Icon from './Icon'
@@ -50,6 +51,13 @@ function AlertItem({ alert, city, subtle, fg }: { alert: WeatherAlert; city: Cit
 export default function AlertSheet({ alerts, city, tone, notifPermission, onEnableNotif, onClose }: AlertSheetProps) {
   const tr = useT()
   if (!alerts.length) return null
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [onClose])
 
   const bg = tone === 'light' ? '#1b2540' : '#fff'
   const fg = tone === 'light' ? '#fff' : '#15243f'
