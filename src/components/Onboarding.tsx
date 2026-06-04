@@ -5,23 +5,8 @@ import { useT } from '../i18n/LocaleContext'
 import { WeatherScene } from './WeatherScene'
 import Icon from './Icon'
 
-const SLIDES = [
-  {
-    scene: 'sun',
-    title: 'Weather that feels\nlike the sky',
-    body: 'Sora paints every forecast with a living sky that shifts and breathes with the conditions outside.',
-  },
-  {
-    scene: 'rain',
-    title: 'Never get\ncaught out',
-    body: 'Minute-by-minute precipitation, severe-weather alerts, and a radar you can scrub through time.',
-  },
-  {
-    scene: 'pcd',
-    title: 'All your places,\none glance',
-    body: 'Save the cities you love and switch between them with a single tap — each with its own sky.',
-  },
-]
+// Scene kinds per slide — scenes don't need translation
+const SLIDE_SCENES = ['sun', 'rain', 'pcd']
 
 interface OnboardingProps {
   themeKey: string
@@ -106,7 +91,7 @@ export default function Onboarding({ themeKey, onDone }: OnboardingProps) {
           <>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
               <div key={'sc' + step} className="hero-rise" style={{ marginBottom: 18 }}>
-                <WeatherScene kind={s.scene} size={240} />
+                <WeatherScene kind={SLIDE_SCENES[step] ?? 'sun'} size={240} />
               </div>
               <h1 key={'ti' + step} className="hero-rise" style={{ fontSize: 'clamp(30px, 8vw, 40px)', fontWeight: 800, letterSpacing: -1, lineHeight: 1.05, whiteSpace: 'pre-line', margin: 0, animationDelay: '.05s' }}>
                 {s.title}
@@ -117,7 +102,7 @@ export default function Onboarding({ themeKey, onDone }: OnboardingProps) {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', gap: 7 }}>
-                {SLIDES.map((_, i) => (
+                {SLIDE_SCENES.map((_, i) => (
                   <span key={i} style={{ height: 7, borderRadius: 4, width: i === step ? 22 : 7, background: i === step ? accent : t.track, transition: 'all .3s' }} />
                 ))}
               </div>

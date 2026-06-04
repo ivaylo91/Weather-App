@@ -88,18 +88,14 @@ export async function shareWeatherImage(
     const blob = await svgToPngBlob(svgStr, 800, 420)
     const file = new File([blob], `${city.name}-weather.png`, { type: 'image/png' })
 
-    // Build a shareable URL that includes OG image params so previews show weather
+    // Build a shareable deep-link URL (OG image served by /api/og on Vercel)
     const [c1, c2] = GRADIENTS[city.cond] ?? ['#1d4ed8', '#0ea5e9']
     const emoji = EMOJIS[city.cond] ?? '🌤️'
-    const ogParams = new URLSearchParams({
-      city: city.name,
-      temp: String(conv(city.temp, unit)),
-      cond: tr.cond[city.cond] ?? city.cond,
-      emoji,
-      c1,
-      c2,
-    })
-    const shareUrl = `${window.location.origin}/?city=${encodeURIComponent(city.name)}`
+    const ogSearch = new URLSearchParams({
+      city: city.name, temp: String(conv(city.temp, unit)),
+      cond: tr.cond[city.cond] ?? city.cond, emoji, c1, c2,
+    }).toString()
+    const shareUrl = `${window.location.origin}/?city=${encodeURIComponent(city.name)}&${ogSearch}`
 
     if (navigator.canShare?.({ files: [file] })) {
       await navigator.share({ files: [file], title: `Weather in ${city.name}`, url: shareUrl })

@@ -1,4 +1,4 @@
-import { Component, type ReactNode, type ErrorInfo, useContext } from 'react'
+import { Component, type ReactNode, type ErrorInfo } from 'react'
 import { LocaleContext } from '../i18n/LocaleContext'
 
 interface Props {

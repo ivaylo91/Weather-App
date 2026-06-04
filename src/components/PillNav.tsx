@@ -3,13 +3,6 @@ import { toneStyles } from '../utils/sky'
 import { useT } from '../i18n/LocaleContext'
 import Icon from './Icon'
 
-const NAV_ITEMS = [
-  { id: 'today',    label: 'Today',    icon: 'today' },
-  { id: 'forecast', label: 'Forecast', icon: 'forecast' },
-  { id: 'radar',    label: 'Radar',    icon: 'radar' },
-  { id: 'cities',   label: 'Cities',   icon: 'cities' },
-] as const
-
 interface PillNavProps {
   view: string
   setView: (v: string) => void

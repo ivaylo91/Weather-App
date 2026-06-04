@@ -73,8 +73,7 @@ export default function HistorySparkline({ lat, lon, tone, accent, unit }: Props
           </linearGradient>
         </defs>
         {/* Band between max and min */}
-        <path d={`${maxLine} L ${toX(n - 1)} ${toY(minTemps[n - 1])} ${minLine.replace('M', 'L')} Z`}
-          fill="url(#bandFill)" />
+        <path d={`${band} Z`} fill="url(#bandFill)" />
         {/* Max temp line */}
         <path d={maxLine} fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" opacity="0.9" />
         {/* Min temp line */}

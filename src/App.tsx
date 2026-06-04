@@ -489,7 +489,6 @@ export default function App({ initialCity }: { initialCity?: string }) {
               city={city}
               tone={tone}
               accent={accent}
-              unit={unit}
               onLocation={() => setView('cities')}
               onBell={() => { if (city.alert) setAlertOpen(true) }}
               onSettings={() => setSettingsOpen(true)}

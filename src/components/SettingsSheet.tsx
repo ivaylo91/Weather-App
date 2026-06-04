@@ -1,8 +1,8 @@
 import type { WeatherTone, Unit, WindUnit } from '../types'
-import { toneStyles, skyFor, THEMES } from '../utils/sky'
+import { skyFor, THEMES } from '../utils/sky'
 import { windUnitLabel } from '../utils/temperature'
 import { useT, useLocale } from '../i18n/LocaleContext'
-import { translations, type Locale } from '../i18n/translations'
+import type { Locale } from '../i18n/translations'
 import Icon from './Icon'
 
 type ToneOverride = 'auto' | 'dark' | 'light'
@@ -64,7 +64,6 @@ export default function SettingsSheet({
   onUnitToggle, onWindUnit, onTheme, onToneOverride, onMotionToggle, onShare, onClose,
   onToggleRainAlert, onToggleSnowAlert,
 }: SettingsSheetProps) {
-  const t = toneStyles(tone)
   const tr = useT()
   const { locale, setLocale } = useLocale()
 
