@@ -1,16 +1,15 @@
-import { useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import type { WeatherTone, StaticCity, CitySuggestion, Unit } from '../types'
+import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import type { WeatherTone, StaticCity, CitySuggestion, Unit, CityData } from '../types'
 import { useT } from '../i18n/LocaleContext'
 import { toneStyles, skyFor } from '../utils/sky'
 import { conv } from '../utils/temperature'
-import { fetchCityData, fetchCitySuggestions } from '../api/weather'
+import { fetchCitySuggestions } from '../api/weather'
 import { WeatherGlyph } from '../components/WeatherScene'
 import { SectionLabel } from '../components/Card'
 import Icon from '../components/Icon'
 
 interface CityCardProps {
-  index: number
   c: StaticCity
   themeKey: string
   unit: Unit
@@ -19,29 +18,19 @@ interface CityCardProps {
   current: boolean
 }
 
-function CityCard({ c, themeKey, unit, index, onSelect, onRemove, current }: CityCardProps) {
+function CityCard({ c, themeKey, unit, onSelect, onRemove, current }: CityCardProps) {
   const tr = useT()
-  // Stagger fetches: only enable after a small delay so cards don't all
-  // fire simultaneously and trigger Open-Meteo rate-limiting (429).
-  const [enabled, setEnabled] = useState(index === 0)
-  useEffect(() => {
-    if (index === 0) return
-    const id = setTimeout(() => setEnabled(true), index * 400)
-    return () => clearTimeout(id)
-  }, [index])
+  const queryClient = useQueryClient()
 
-  // Same key as the main weather query — shares the cache, no duplicate calls
-  const { data } = useQuery({
-    queryKey: ['cityData', c.latitude, c.longitude],
-    queryFn: () => fetchCityData(c.latitude, c.longitude, c.name, c.region, c.id),
-    staleTime: 1000 * 60 * 15,
-    enabled,
-  })
+  // Read from the TanStack Query cache — NO new network request.
+  // Data is already there if this city was recently the active city.
+  // Otherwise we fall back to the static placeholder values.
+  const cached = queryClient.getQueryData<CityData>(['cityData', c.latitude, c.longitude])
 
-  const cond = data?.cond ?? c.cond
-  const temp = data?.temp ?? c.temp
-  const hi   = data?.hi   ?? c.hi
-  const lo   = data?.lo   ?? c.lo
+  const cond = cached?.cond ?? c.cond
+  const temp = cached?.temp ?? c.temp
+  const hi   = cached?.hi   ?? c.hi
+  const lo   = cached?.lo   ?? c.lo
 
   const sky = skyFor(cond, themeKey)
   const ct = toneStyles(sky.tone)
@@ -186,11 +175,10 @@ export default function CitiesView({ cities, currentId, themeKey, tone, accent, 
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
-        {savedFiltered.map((c, i) => (
+        {savedFiltered.map(c => (
           <CityCard
             key={c.id}
             c={c}
-            index={i}
             themeKey={themeKey}
             unit={unit}
             current={c.id === currentId}
