@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
-import type { WeatherTone, CityData } from '../types'
+import type { WeatherTone, CityData, WindUnit } from '../types'
 import { toneStyles } from '../utils/sky'
+import { convWind, windUnitLabel } from '../utils/temperature'
 import { useT } from '../i18n/LocaleContext'
 import { Card } from './Card'
 import Icon from './Icon'
@@ -121,15 +122,17 @@ interface WindCardProps {
   city: CityData
   tone: WeatherTone
   accent: string
+  windUnit?: WindUnit
 }
 
-export function WindCard({ city, tone, accent }: WindCardProps) {
+export function WindCard({ city, tone, accent, windUnit = 'kmh' }: WindCardProps) {
   const tr = useT()
   const t = toneStyles(tone)
   const dirs: Record<string, number> = { N: 0, NE: 45, E: 90, SE: 135, S: 180, SW: 225, W: 270, NW: 315, WNW: 292, ENE: 67, ESE: 112, WSW: 247, NNE: 22, SSE: 157, SSW: 202, NNW: 337 }
   const deg = dirs[city.det.windDir] ?? 0
+  const wLabel = windUnitLabel(windUnit)
   return (
-    <DetailCard tone={tone} accent={accent} icon="wind" label={tr.wind} value={city.det.wind} unit="km/h" sub={tr.gusts(city.det.gust)}>
+    <DetailCard tone={tone} accent={accent} icon="wind" label={tr.wind} value={convWind(city.det.wind, windUnit)} unit={wLabel} sub={tr.gusts(convWind(city.det.gust, windUnit), wLabel)}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: -2 }}>
         <div style={{ position: 'relative', width: 42, height: 42, borderRadius: 21, border: `1.5px solid ${t.track}`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
           <span style={{ position: 'absolute', top: 2, fontSize: 8, fontWeight: 800, color: t.dim }}>N</span>

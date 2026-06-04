@@ -2,7 +2,6 @@ import type { WeatherTone, HourlyPoint, Unit } from '../types'
 import { toneStyles } from '../utils/sky'
 import { conv } from '../utils/temperature'
 import { useT } from '../i18n/LocaleContext'
-import Icon from './Icon'
 import { WeatherGlyph } from './WeatherScene'
 
 function smoothPath(pts: Array<{ x: number; y: number }>): string {
@@ -42,7 +41,8 @@ export default function HourlyStrip({ hours, tone, accent, unit = 'C' }: HourlyS
   const max = Math.max(...temps)
   const span = Math.max(1, max - min)
   const top = 40
-  const band = 46
+  const band = 40
+  const BAR_MAX = 18  // max bar height px
   const pts = hours.map((h, i) => ({
     x: i * cellW + cellW / 2,
     y: top + (1 - (h.temp - min) / span) * band,
@@ -83,14 +83,24 @@ export default function HourlyStrip({ hours, tone, accent, unit = 'C' }: HourlyS
                 {h.now ? tr.now : fmtHour(h.hour)}
               </div>
               <div style={{ height: 30 }} />
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                 <div style={{ transform: 'scale(0.92)' }}>
                   <WeatherGlyph kind={h.cond} size={26} />
                 </div>
                 <div style={{ fontSize: 15, fontWeight: 700 }}>{conv(h.temp, unit)}°</div>
-                {h.pop >= 25 && (
-                  <div style={{ fontSize: 10.5, fontWeight: 700, color: accent, display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Icon name="drop" size={10} stroke={2.4} />{h.pop}%
+                {/* Precipitation bar */}
+                <div style={{ display: 'flex', alignItems: 'flex-end', height: BAR_MAX + 2 }}>
+                  <div style={{
+                    width: 20, borderRadius: '3px 3px 0 0',
+                    height: Math.max(3, (h.pop / 100) * BAR_MAX),
+                    background: h.pop >= 10 ? accent : t.track,
+                    opacity: h.pop >= 10 ? 0.7 + h.pop / 100 * 0.3 : 0.3,
+                    transition: 'height .3s',
+                  }} />
+                </div>
+                {h.pop >= 20 && (
+                  <div style={{ fontSize: 10, fontWeight: 700, color: accent, marginTop: -2 }}>
+                    {h.pop}%
                   </div>
                 )}
               </div>

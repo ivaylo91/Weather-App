@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { WeatherTone, CityData } from '../types'
 import { toneStyles } from '../utils/sky'
@@ -34,9 +34,11 @@ export default function RadarView({ city, tone, accent }: RadarViewProps) {
   const t = toneStyles(tone)
   const tr = useT()
   const containerRef = useRef<HTMLDivElement>(null)
+  type Layer = 'precip' | 'satellite'
   const [dims, setDims] = useState({ w: 360, h: 340 })
   const [frameIdx, setFrameIdx] = useState(0)
   const [playing, setPlaying] = useState(true)
+  const [layer, setLayer] = useState<Layer>('precip')
 
   const { data: radarData } = useQuery({
     queryKey: ['radarFrames'],
@@ -49,8 +51,15 @@ export default function RadarView({ city, tone, accent }: RadarViewProps) {
   // Combine last 6 past frames + up to 3 nowcast
   const frames = useMemo<RadarFrame[]>(() => {
     if (!radarData) return []
+    if (layer === 'satellite') return radarData.satellite.slice(-9)
     return [...radarData.past.slice(-6), ...radarData.nowcast.slice(0, 3)]
-  }, [radarData])
+  }, [radarData, layer])
+
+  // Reset to latest frame when switching layers
+  const switchLayer = useCallback((l: Layer) => {
+    setLayer(l)
+    setFrameIdx(0)
+  }, [])
 
   const nowTs = useMemo(() => {
     if (!radarData?.past.length) return Math.floor(Date.now() / 1000)
@@ -126,8 +135,10 @@ export default function RadarView({ city, tone, accent }: RadarViewProps) {
               />
               {radarData && currentFrame && (
                 <img
-                  key={currentFrame.path}
-                  src={`${radarData.host}${currentFrame.path}/256/${ZOOM}/${tile.tileX}/${tile.tileY}/2/1_1.png`}
+                  key={currentFrame.path + layer}
+                  src={layer === 'satellite'
+                    ? `${radarData.host}${currentFrame.path}/256/${ZOOM}/${tile.tileX}/${tile.tileY}/0/0_0.png`
+                    : `${radarData.host}${currentFrame.path}/256/${ZOOM}/${tile.tileX}/${tile.tileY}/2/1_1.png`}
                   width={TILE_SIZE} height={TILE_SIZE}
                   style={{ position: 'absolute', top: 0, left: 0, opacity: 0.65, display: 'block', pointerEvents: 'none' }}
                   alt=""
@@ -149,19 +160,34 @@ export default function RadarView({ city, tone, accent }: RadarViewProps) {
             <div style={{ fontSize: 12, opacity: 0.9, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ width: 7, height: 7, borderRadius: 4, background: accent, display: 'inline-block' }} className="pulse-dot" />
               {radarData
-                ? `Radar · ${currentFrame ? fmtFrameLabel(currentFrame.time, nowTs) : '—'}`
+                ? `${layer === 'satellite' ? tr.layerSatellite : tr.layerPrecip} · ${currentFrame ? fmtFrameLabel(currentFrame.time, nowTs) : '—'}`
                 : tr.loadingRadar}
             </div>
           </div>
 
-          {/* Intensity legend */}
-          <div style={{ position: 'absolute', top: 14, right: 16, background: 'rgba(8,14,28,0.72)', borderRadius: 12, padding: '8px 10px', backdropFilter: 'blur(8px)', zIndex: 10 }}>
-            <div style={{ fontSize: 9.5, color: '#fff', fontWeight: 700, marginBottom: 5, opacity: 0.75 }}>{tr.intensity}</div>
-            <div style={{ width: 90, height: 7, borderRadius: 4, background: 'linear-gradient(90deg, oklch(0.7 0.16 220), oklch(0.72 0.18 150), oklch(0.8 0.18 95), oklch(0.66 0.22 25))' }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 8.5, color: 'rgba(255,255,255,0.65)', marginTop: 3, fontWeight: 600 }}>
-              <span>{tr.lightIntensity}</span><span>{tr.heavyIntensity}</span>
-            </div>
+          {/* Layer toggle */}
+          <div style={{ position: 'absolute', bottom: 14, left: 16, zIndex: 10, display: 'flex', gap: 6 }}>
+            {(['precip', 'satellite'] as Layer[]).map(l => (
+              <button key={l} onClick={() => switchLayer(l)} className="press" style={{
+                padding: '5px 10px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 11.5, fontWeight: 700,
+                background: layer === l ? accent : 'rgba(8,14,28,0.6)',
+                color: '#fff', backdropFilter: 'blur(8px)',
+              }}>
+                {l === 'precip' ? tr.layerPrecip : tr.layerSatellite}
+              </button>
+            ))}
           </div>
+
+          {/* Intensity legend — only for precip */}
+          {layer === 'precip' && (
+            <div style={{ position: 'absolute', top: 14, right: 16, background: 'rgba(8,14,28,0.72)', borderRadius: 12, padding: '8px 10px', backdropFilter: 'blur(8px)', zIndex: 10 }}>
+              <div style={{ fontSize: 9.5, color: '#fff', fontWeight: 700, marginBottom: 5, opacity: 0.75 }}>{tr.intensity}</div>
+              <div style={{ width: 90, height: 7, borderRadius: 4, background: 'linear-gradient(90deg, oklch(0.7 0.16 220), oklch(0.72 0.18 150), oklch(0.8 0.18 95), oklch(0.66 0.22 25))' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 8.5, color: 'rgba(255,255,255,0.65)', marginTop: 3, fontWeight: 600 }}>
+                <span>{tr.lightIntensity}</span><span>{tr.heavyIntensity}</span>
+              </div>
+            </div>
+          )}
         </div>
       </Card>
 

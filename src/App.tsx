@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } fro
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { skyFor, toneStyles } from './utils/sky'
 import { fetchCityData, fetchAlerts, reverseGeocode } from './api/weather'
-import type { StaticCity, CityData, Unit, WeatherTone, WeatherCondition } from './types'
+import type { StaticCity, CityData, Unit, WindUnit, WeatherTone, WeatherCondition } from './types'
 import { CONDITIONS } from './utils/sky'
 import { conv } from './utils/temperature'
 import { LocaleContext } from './i18n/LocaleContext'
@@ -67,6 +67,7 @@ export default function App() {
   const [view, setView] = useState<string>(() => LS.get('view', 'today'))
   const [themeKey, setThemeKey] = useState<string>(() => LS.get('themeKey', 'Sky'))
   const [unit, setUnit] = useState<Unit>(() => LS.get('unit', 'C'))
+  const [windUnit, setWindUnit] = useState<WindUnit>(() => LS.get('windUnit', 'kmh'))
   const [cityId, setCityId] = useState<string>(() => LS.get('cityId', PRESET_CITIES[0].id))
   const [savedCities, setSavedCities] = useState<StaticCity[]>(() => LS.get('savedCities', PRESET_CITIES))
   const [alertOpen, setAlertOpen] = useState(false)
@@ -123,6 +124,7 @@ export default function App() {
 
   // Persist unit
   useEffect(() => { LS.set('unit', unit) }, [unit])
+  useEffect(() => { LS.set('windUnit', windUnit) }, [windUnit])
   const toggleUnit = useCallback(() => setUnit(u => u === 'C' ? 'F' : 'C'), [])
 
   // Fetch live weather for current city
@@ -343,7 +345,7 @@ export default function App() {
   const renderView = () => {
     switch (view) {
       case 'today':
-        return <TodayView city={city} tone={tone} accent={accent} sky={sky} unit={unit} isLoading={cityLoading} onAlert={() => setAlertOpen(true)} savedCities={savedCities} cityId={cityId} onSwipe={handleCitySwipe} />
+        return <TodayView city={city} tone={tone} accent={accent} sky={sky} unit={unit} windUnit={windUnit} isLoading={cityLoading} onAlert={() => setAlertOpen(true)} savedCities={savedCities} cityId={cityId} onSwipe={handleCitySwipe} />
       case 'forecast':
         return <ForecastView city={city} tone={tone} accent={accent} unit={unit} />
       case 'radar':
@@ -363,7 +365,7 @@ export default function App() {
           />
         )
       default:
-        return <TodayView city={city} tone={tone} accent={accent} sky={sky} unit={unit} isLoading={cityLoading} onAlert={() => setAlertOpen(true)} savedCities={savedCities} cityId={cityId} onSwipe={handleCitySwipe} />
+        return <TodayView city={city} tone={tone} accent={accent} sky={sky} unit={unit} windUnit={windUnit} isLoading={cityLoading} onAlert={() => setAlertOpen(true)} savedCities={savedCities} cityId={cityId} onSwipe={handleCitySwipe} />
     }
   }
 
@@ -457,10 +459,12 @@ export default function App() {
           tone={tone}
           accent={accent}
           unit={unit}
+          windUnit={windUnit}
           themeKey={themeKey}
           toneOverride={toneOverride}
           motionOff={motionOff}
           onUnitToggle={toggleUnit}
+          onWindUnit={setWindUnit}
           onTheme={setThemeKey}
           onToneOverride={setToneOverride}
           onMotionToggle={() => setMotionOff(v => !v)}

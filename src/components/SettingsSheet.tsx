@@ -1,5 +1,6 @@
-import type { WeatherTone, Unit } from '../types'
+import type { WeatherTone, Unit, WindUnit } from '../types'
 import { toneStyles, skyFor, THEMES } from '../utils/sky'
+import { windUnitLabel } from '../utils/temperature'
 import { useT, useLocale } from '../i18n/LocaleContext'
 import { translations, type Locale } from '../i18n/translations'
 import Icon from './Icon'
@@ -10,10 +11,12 @@ interface SettingsSheetProps {
   tone: WeatherTone
   accent: string
   unit: Unit
+  windUnit: WindUnit
   themeKey: string
   toneOverride: ToneOverride
   motionOff: boolean
   onUnitToggle: () => void
+  onWindUnit: (u: WindUnit) => void
   onTheme: (k: string) => void
   onToneOverride: (v: ToneOverride) => void
   onMotionToggle: () => void
@@ -52,8 +55,8 @@ function Pill({ active, accent, fg, onClick, children }: {
 }
 
 export default function SettingsSheet({
-  tone, accent, unit, themeKey, toneOverride, motionOff,
-  onUnitToggle, onTheme, onToneOverride, onMotionToggle, onShare, onClose,
+  tone, accent, unit, windUnit, themeKey, toneOverride, motionOff,
+  onUnitToggle, onWindUnit, onTheme, onToneOverride, onMotionToggle, onShare, onClose,
 }: SettingsSheetProps) {
   const t = toneStyles(tone)
   const tr = useT()
@@ -105,6 +108,17 @@ export default function SettingsSheet({
               {(['C', 'F'] as Unit[]).map(u => (
                 <Pill key={u} active={unit === u} accent={accent} fg={fg} onClick={onUnitToggle}>
                   °{u}
+                </Pill>
+              ))}
+            </div>
+          </Row>
+
+          {/* Wind speed unit */}
+          <Row label={tr.windSpeed}>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {(['kmh', 'mph', 'ms'] as WindUnit[]).map(u => (
+                <Pill key={u} active={windUnit === u} accent={accent} fg={fg} onClick={() => onWindUnit(u)}>
+                  {windUnitLabel(u)}
                 </Pill>
               ))}
             </div>

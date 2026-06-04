@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import type { CSSProperties } from 'react'
-import type { WeatherTone, CityData, Unit, StaticCity } from '../types'
+import type { WeatherTone, CityData, Unit, WindUnit, StaticCity } from '../types'
 import { toneStyles } from '../utils/sky'
 import type { SkyResult } from '../utils/sky'
 import { conv } from '../utils/temperature'
@@ -23,6 +23,7 @@ interface TodayViewProps {
   savedCities?: StaticCity[]
   cityId?: string
   onSwipe?: (dir: 'left' | 'right') => void
+  windUnit?: WindUnit
 }
 
 function LoadingSkeleton({ tone }: { tone: WeatherTone }) {
@@ -43,7 +44,7 @@ function LoadingSkeleton({ tone }: { tone: WeatherTone }) {
   )
 }
 
-export default function TodayView({ city, tone, accent, sky, unit, isLoading, onAlert, savedCities = [], cityId, onSwipe }: TodayViewProps) {
+export default function TodayView({ city, tone, accent, sky, unit, isLoading, onAlert, savedCities = [], cityId, onSwipe, windUnit = 'kmh' }: TodayViewProps) {
   const t = toneStyles(tone)
   const tr = useT()
   const d = city.det
@@ -124,7 +125,7 @@ export default function TodayView({ city, tone, accent, sky, unit, isLoading, on
       {/* 7-day */}
       {city.daily.length > 0 && (
         <Card tone={tone}>
-          <SectionLabel tone={tone} icon="forecast">{tr.sevenDay}</SectionLabel>
+          <SectionLabel tone={tone} icon="forecast">{tr.forecastDays(city.daily.length)}</SectionLabel>
           <DailyList days={city.daily} tone={tone} accent={accent} unit={unit} />
         </Card>
       )}
@@ -134,7 +135,7 @@ export default function TodayView({ city, tone, accent, sky, unit, isLoading, on
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }} className="detail-grid">
           <SunArc city={city} tone={tone} accent={accent} />
           <UVCard city={city} tone={tone} accent={accent} />
-          <WindCard city={city} tone={tone} accent={accent} />
+          <WindCard city={city} tone={tone} accent={accent} windUnit={windUnit} />
           <DetailCard
             tone={tone} accent={accent} icon="thermo" label={tr.feelsLike}
             value={`${conv(d.feels, unit)}°`}

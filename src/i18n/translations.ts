@@ -21,8 +21,9 @@ export interface Translations {
   airQuality: string
   sun: string
   // Computed sub-texts
-  gusts: (g: number) => string
+  gusts: (g: number, u: string) => string
   dewPoint: (d: number) => string
+  forecastDays: (n: number) => string
   uv: (n: number) => string
   aqi: (n: number) => string
   feelsLikeSub: (feels: number, actual: number) => string
@@ -82,6 +83,10 @@ export interface Translations {
   temperature: string
   animations: string
   share: string
+  windSpeed: string
+  layer: string
+  layerPrecip: string
+  layerSatellite: string
 }
 
 const en: Translations = {
@@ -105,8 +110,9 @@ const en: Translations = {
   pressure: 'Pressure',
   airQuality: 'Air quality',
   sun: 'Sun',
-  gusts: (g) => `Gusts ${g} km/h`,
+  gusts: (g, u) => `Gusts ${g} ${u}`,
   dewPoint: (d) => `Dew point ${d}°`,
+  forecastDays: (n) => `${n}-day forecast`,
   uv: (n) => n <= 2 ? 'Low' : n <= 5 ? 'Moderate' : n <= 7 ? 'High' : n <= 10 ? 'Very High' : 'Extreme',
   aqi: (n) => n <= 20 ? 'Good' : n <= 40 ? 'Fair' : n <= 60 ? 'Moderate' : n <= 80 ? 'Poor' : n <= 100 ? 'Very Poor' : 'Extremely Poor',
   feelsLikeSub: (f, a) => f > a ? 'Warmer than actual' : f < a ? 'Cooler than actual' : 'Same as actual',
@@ -163,6 +169,10 @@ const en: Translations = {
   temperature: 'Temperature',
   animations: 'Animations',
   share: 'Share weather',
+  windSpeed: 'Wind speed',
+  layer: 'Radar layer',
+  layerPrecip: 'Precip',
+  layerSatellite: 'Satellite',
 }
 
 const bg: Translations = {
@@ -186,8 +196,9 @@ const bg: Translations = {
   pressure: 'Налягане',
   airQuality: 'Кач. въздух',
   sun: 'Слънце',
-  gusts: (g) => `Пориви ${g} км/ч`,
+  gusts: (g, u) => `Пориви ${g} ${u}`,
   dewPoint: (d) => `Точка на орос. ${d}°`,
+  forecastDays: (n) => `${n}-дневна прогноза`,
   uv: (n) => n <= 2 ? 'Ниски' : n <= 5 ? 'Умерени' : n <= 7 ? 'Високи' : n <= 10 ? 'Много високи' : 'Екстремни',
   aqi: (n) => n <= 20 ? 'Добро' : n <= 40 ? 'Задоволително' : n <= 60 ? 'Умерено' : n <= 80 ? 'Лошо' : n <= 100 ? 'Много лошо' : 'Изкл. лошо',
   feelsLikeSub: (f, a) => f > a ? 'По-топло от реалното' : f < a ? 'По-студено от реалното' : 'Равно на реалното',
@@ -244,6 +255,10 @@ const bg: Translations = {
   temperature: 'Температура',
   animations: 'Анимации',
   share: 'Споделяне',
+  windSpeed: 'Скорост на вятъра',
+  layer: 'Слой на радара',
+  layerPrecip: 'Валежи',
+  layerSatellite: 'Сателит',
 }
 
 export const translations: Record<Locale, Translations> = { en, bg }

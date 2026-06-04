@@ -65,7 +65,7 @@ export async function fetchCityData(
     `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,weather_code,is_day` +
     `&hourly=temperature_2m,precipitation_probability,weather_code,is_day` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset,precipitation_probability_max` +
-    `&forecast_days=7&timezone=auto`
+    `&forecast_days=10&timezone=auto`
 
   const airUrl = `${AIR_URL}?latitude=${lat}&longitude=${lon}&current=european_aqi`
 
@@ -267,6 +267,7 @@ export interface RadarData {
   host: string
   past: RadarFrame[]
   nowcast: RadarFrame[]
+  satellite: RadarFrame[]
 }
 
 export async function fetchRadarData(): Promise<RadarData | null> {
@@ -278,6 +279,7 @@ export async function fetchRadarData(): Promise<RadarData | null> {
       host: data.host as string,
       past: (data.radar?.past ?? []) as RadarFrame[],
       nowcast: (data.radar?.nowcast ?? []) as RadarFrame[],
+      satellite: (data.satellite?.infrared ?? []) as RadarFrame[],
     }
   } catch {
     return null

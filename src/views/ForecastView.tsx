@@ -141,7 +141,7 @@ export default function ForecastView({ city, tone, accent, unit }: ForecastViewP
 
       {/* full 7-day */}
       <Card tone={tone}>
-        <SectionLabel tone={tone} icon="forecast">{tr.nextSevenDays}</SectionLabel>
+        <SectionLabel tone={tone} icon="forecast">{tr.forecastDays(city.daily.length)}</SectionLabel>
         <DailyList days={city.daily} tone={tone} accent={accent} unit={unit} />
       </Card>
     </div>

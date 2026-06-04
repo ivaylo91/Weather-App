@@ -1,6 +1,7 @@
 export type WeatherCondition = 'clear-day' | 'clear-night' | 'partly-cloudy-day' | 'partly-cloudy-night' | 'cloudy' | 'rain' | 'thunderstorm' | 'snow' | 'fog'
 export type WeatherTone = 'light' | 'dark'
 export type Unit = 'C' | 'F'
+export type WindUnit = 'kmh' | 'mph' | 'ms'
 
 export interface WeatherAlert {
   kind: string
