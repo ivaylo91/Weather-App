@@ -21,6 +21,7 @@ interface PrecipChartProps {
 function PrecipChart({ hours, tone, accent }: PrecipChartProps) {
   const t = toneStyles(tone)
   const cellW = 30
+  if (!hours.length) return null
   return (
     <div style={{ overflowX: 'auto', margin: '0 -4px' }} className="hide-scroll">
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 0, height: 96, width: hours.length * cellW }}>
@@ -56,6 +57,19 @@ export default function ForecastView({ city, tone, accent, unit }: ForecastViewP
   const t = toneStyles(tone)
   const tr = useT()
   const [sel, setSel] = useState(0)
+
+  // Guard: daily data not yet loaded (placeholder has daily: [])
+  if (!city.daily.length) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 8 }}>
+        <style>{`@keyframes fpsk{0%,100%{opacity:.4}50%{opacity:.85}}`}</style>
+        {[220, 180, 160, 120].map((h, i) => (
+          <div key={i} style={{ height: h, borderRadius: 26, background: t.cardBg, animation: `fpsk 1.8s ease-in-out ${i * 0.15}s infinite` }} />
+        ))}
+      </div>
+    )
+  }
+
   const day = city.daily[sel]
 
   const stats = useMemo(() => {

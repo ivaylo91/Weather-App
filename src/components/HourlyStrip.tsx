@@ -32,6 +32,7 @@ interface HourlyStripProps {
 export default function HourlyStrip({ hours, tone, accent, unit = 'C' }: HourlyStripProps) {
   const t = toneStyles(tone)
   const tr = useT()
+  if (!hours.length) return null  // nothing to render until data arrives
   const cellW = 62
   const H = 150
   const n = hours.length

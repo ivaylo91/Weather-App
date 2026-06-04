@@ -14,6 +14,7 @@ interface DailyListProps {
 export default function DailyList({ days, tone, accent, unit = 'C' }: DailyListProps) {
   const t = toneStyles(tone)
   const tr = useT()
+  if (!days.length) return null
   const his = days.map(d => d.hi)
   const los = days.map(d => d.lo)
   const gMax = Math.max(...his)
