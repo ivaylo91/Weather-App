@@ -1,4 +1,4 @@
-export type Locale = 'en' | 'bg' | 'de' | 'fr' | 'es' | 'pt' | 'ro' | 'tr'
+export type Locale = 'en' | 'bg'
 
 export interface Translations {
   // Navigation
@@ -286,7 +286,12 @@ const bg: Translations = {
   apiError: 'Данни: офлайн',
 }
 
-const de: Translations = {
+export const translations: Record<Locale, Translations> = { en, bg }
+
+// Additional languages available — uncomment and extend Locale type to re-enable:
+// DE, FR, ES, PT, RO, TR translations were here; add back via git history if needed.
+
+const _unused: Translations = {
   nav: { today: 'Heute', forecast: 'Vorhersage', radar: 'Radar', cities: 'Städte' },
   cond: {
     'clear-day': 'Klar', 'clear-night': 'Klar',
@@ -658,5 +663,3 @@ const tr: Translations = {
   installBody: 'Hızlı erişim için Sora\'yı yükle',
   install: 'Yükle', apiOk: 'Hava verileri: bağlı', apiError: 'Hava verileri: çevrimdışı',
 }
-
-export const translations: Record<Locale, Translations> = { en, bg, de, fr, es, pt, ro, tr }

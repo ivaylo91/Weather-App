@@ -111,15 +111,15 @@ test('language switching shows translated UI text', async ({ page }) => {
   await ready(page)
   await page.click('button[aria-label="Settings"]')
 
-  // Switch to French
-  await page.locator('button', { hasText: 'Français' }).click()
+  // Switch to Bulgarian
+  await page.locator('button', { hasText: 'Български' }).click()
   await page.waitForTimeout(300)
 
-  // Settings title is now in French
-  await expect(page.locator('text=Paramètres')).toBeVisible()
+  // Settings title is now in Bulgarian
+  await expect(page.locator('text=Настройки')).toBeVisible()
 
-  // Wind speed label is in French
-  await expect(page.locator('text=Vitesse du vent')).toBeVisible()
+  // Wind speed label is in Bulgarian
+  await expect(page.locator('text=Скорост на вятъра')).toBeVisible()
 
   // Switch back to English and close
   await page.locator('button', { hasText: 'English' }).click()

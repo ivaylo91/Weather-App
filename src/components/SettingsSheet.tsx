@@ -117,12 +117,6 @@ export default function SettingsSheet({
               {([
                 ['en', '🇬🇧 English'],
                 ['bg', '🇧🇬 Български'],
-                ['de', '🇩🇪 Deutsch'],
-                ['fr', '🇫🇷 Français'],
-                ['es', '🇪🇸 Español'],
-                ['pt', '🇵🇹 Português'],
-                ['ro', '🇷🇴 Română'],
-                ['tr', '🇹🇷 Türkçe'],
               ] as [Locale, string][]).map(([l, label]) => (
                 <Pill key={l} active={locale === l} accent={accent} fg={fg} onClick={() => setLocale(l)}>
                   {label}
