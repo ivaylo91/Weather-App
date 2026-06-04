@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { WeatherTone, StaticCity, CitySuggestion, Unit } from '../types'
 import { useT } from '../i18n/LocaleContext'
@@ -10,6 +10,7 @@ import { SectionLabel } from '../components/Card'
 import Icon from '../components/Icon'
 
 interface CityCardProps {
+  index: number
   c: StaticCity
   themeKey: string
   unit: Unit
@@ -18,13 +19,23 @@ interface CityCardProps {
   current: boolean
 }
 
-function CityCard({ c, themeKey, unit, onSelect, onRemove, current }: CityCardProps) {
+function CityCard({ c, themeKey, unit, index, onSelect, onRemove, current }: CityCardProps) {
   const tr = useT()
-  // Fetch live weather — stale after 15 min, show static while loading
+  // Stagger fetches: only enable after a small delay so cards don't all
+  // fire simultaneously and trigger Open-Meteo rate-limiting (429).
+  const [enabled, setEnabled] = useState(index === 0)
+  useEffect(() => {
+    if (index === 0) return
+    const id = setTimeout(() => setEnabled(true), index * 400)
+    return () => clearTimeout(id)
+  }, [index])
+
+  // Same key as the main weather query — shares the cache, no duplicate calls
   const { data } = useQuery({
-    queryKey: ['cityCard', c.latitude, c.longitude],
+    queryKey: ['cityData', c.latitude, c.longitude],
     queryFn: () => fetchCityData(c.latitude, c.longitude, c.name, c.region, c.id),
     staleTime: 1000 * 60 * 15,
+    enabled,
   })
 
   const cond = data?.cond ?? c.cond
@@ -175,10 +186,11 @@ export default function CitiesView({ cities, currentId, themeKey, tone, accent, 
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
-        {savedFiltered.map(c => (
+        {savedFiltered.map((c, i) => (
           <CityCard
             key={c.id}
             c={c}
+            index={i}
             themeKey={themeKey}
             unit={unit}
             current={c.id === currentId}
