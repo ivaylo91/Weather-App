@@ -18,7 +18,7 @@ const WRAP: CSSProperties = {
 function RainLayer({ storm }: { storm?: boolean }) {
   const drops = useMemo(() => {
     const r = rng(storm ? 77 : 12)
-    return Array.from({ length: storm ? 40 : 24 }, (_, i) => ({
+    return Array.from({ length: storm ? 40 : 24 }, () => ({
       left:   `${r() * 100}%`,
       top:    `-${30 + r() * 40}px`,
       delay:  `${r() * 1.8}s`,
