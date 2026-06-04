@@ -1,4 +1,4 @@
-import type { CityData, CityDetails, WeatherCondition, HourlyPoint, DailyDay, CitySuggestion } from '../types'
+import type { CityData, CityDetails, WeatherCondition, HourlyPoint, DailyDay, CitySuggestion, WeatherAlert } from '../types'
 
 const KEY = import.meta.env.VITE_OPENMETEO_KEY as string | undefined
 const _k = KEY ? `&apikey=${KEY}` : ''
@@ -231,41 +231,48 @@ export async function fetchCitySuggestions(query: string): Promise<CitySuggestio
   return data.results ?? []
 }
 
-// ---- NWS Weather Alerts (US only) ----
-export interface FetchedAlert {
-  kind: string
-  sev: 'Extreme' | 'Severe' | 'Moderate'
-  until: string
-  text: string
+// ---- Weather Alerts — NWS (US) + MeteoAlarm (Europe) ----
+
+function isUS(lat: number, lon: number): boolean {
+  return lat >= 18 && lat <= 72 && lon >= -180 && lon <= -65
 }
 
-export async function fetchAlerts(lat: number, lon: number): Promise<FetchedAlert | null> {
-  try {
-    const res = await fetch(
-      `https://api.weather.gov/alerts/active?point=${lat.toFixed(4)},${lon.toFixed(4)}`,
-      { headers: { 'User-Agent': 'SoraWeatherApp/1.0 (weather-app)' } }
-    )
-    if (!res.ok) return null
-    const data = await res.json()
-    const features: unknown[] = data.features ?? []
-    if (!features.length) return null
+async function fetchNWSAlerts(lat: number, lon: number): Promise<WeatherAlert[]> {
+  const res = await fetch(
+    `https://api.weather.gov/alerts/active?point=${lat.toFixed(4)},${lon.toFixed(4)}`,
+    { headers: { 'User-Agent': 'SoraWeatherApp/1.0 (weather-app)' } }
+  )
+  if (!res.ok) return []
+  const data = await res.json()
+  const features: unknown[] = data.features ?? []
 
-    const p = (features[0] as { properties: Record<string, string> }).properties
+  return features.slice(0, 5).map(f => {
+    const p = (f as { properties: Record<string, string> }).properties
     const rawSev = p.severity ?? 'Minor'
-    const sev: 'Extreme' | 'Severe' | 'Moderate' =
+    const sev: WeatherAlert['sev'] =
       rawSev === 'Extreme' ? 'Extreme' : rawSev === 'Severe' ? 'Severe' : 'Moderate'
-
     const expires = p.expires ? new Date(p.expires) : null
     const until = expires
       ? expires.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
       : 'Further notice'
-
     const raw = p.description || p.headline || 'Weather alert in effect.'
-    const text = raw.replace(/\n{2,}/g, ' ').replace(/\n/g, ' ').slice(0, 280)
+    return { kind: p.event || 'Weather Alert', sev, until, text: raw.replace(/\n{2,}/g, ' ').replace(/\n/g, ' ').slice(0, 280) }
+  }).sort((a, b) => ({ Extreme: 0, Severe: 1, Moderate: 2 }[a.sev] - { Extreme: 0, Severe: 1, Moderate: 2 }[b.sev]))
+}
 
-    return { kind: p.event || 'Weather Alert', sev, until, text }
+async function fetchMeteoAlarm(lat: number, lon: number): Promise<WeatherAlert[]> {
+  const res = await fetch(`/api/meteoalarm?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`)
+  if (!res.ok) return []
+  return res.json() as Promise<WeatherAlert[]>
+}
+
+export async function fetchAlerts(lat: number, lon: number): Promise<WeatherAlert[]> {
+  try {
+    return isUS(lat, lon)
+      ? await fetchNWSAlerts(lat, lon)
+      : await fetchMeteoAlarm(lat, lon)
   } catch {
-    return null
+    return []
   }
 }
 

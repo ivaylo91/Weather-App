@@ -76,7 +76,7 @@ export default function TodayView({ city, tone, accent, sky, unit, isLoading, is
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      {city.alert && <AlertBanner alert={city.alert} tone={tone} onClick={onAlert} />}
+      {city.alerts?.length > 0 && <AlertBanner alerts={city.alerts} tone={tone} onClick={onAlert} />}
 
       {/* Hero */}
       <div

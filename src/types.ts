@@ -58,7 +58,7 @@ export interface CityData {
   sunrise: number
   sunset: number
   det: CityDetails
-  alert: WeatherAlert | null
+  alerts: WeatherAlert[]   // ordered most-severe first
   hourly: HourlyPoint[]
   daily: DailyDay[]
   latitude: number

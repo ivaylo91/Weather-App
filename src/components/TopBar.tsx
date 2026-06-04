@@ -60,10 +60,10 @@ export default function TopBar({ city, tone, onLocation, onBell, onSettings }: T
         onClick={onBell}
         className="press"
         style={iconBtnStyle(t)}
-        aria-label={city.alert ? `Weather alert: ${city.alert.kind}. Tap for details.` : 'No active alerts'}
+        aria-label={city.alerts?.length ? `${city.alerts.length} weather alert${city.alerts.length > 1 ? 's' : ''}. Tap for details.` : 'No active alerts'}
       >
         <Icon name="bell" size={20} stroke={2.2} aria-hidden="true" />
-        {city.alert && (
+        {city.alerts?.length > 0 && (
           <span
             aria-hidden="true"
             style={{

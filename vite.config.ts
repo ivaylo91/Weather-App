@@ -5,6 +5,20 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   plugins: [
     react(),
+    // In dev, Vite would try to serve api/*.ts as modules — intercept /api/ routes instead
+    {
+      name: 'api-dev-stub',
+      configureServer(server) {
+        server.middlewares.use('/api/meteoalarm', (_req, res) => {
+          res.setHeader('Content-Type', 'application/json')
+          res.end('[]')  // no MeteoAlarm in dev; prod uses the real Edge Function
+        })
+        server.middlewares.use('/api/og', (_req, res) => {
+          res.writeHead(302, { Location: '/pwa-192.png' })
+          res.end()
+        })
+      },
+    },
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon-32.png', 'apple-touch-icon.png'],

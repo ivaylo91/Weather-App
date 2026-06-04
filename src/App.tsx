@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { skyFor, toneStyles } from './utils/sky'
 import { fetchCityData, fetchAlerts, fetchCitySuggestions, reverseGeocode } from './api/weather'
 import { shareWeatherImage } from './utils/shareImage'
-import type { StaticCity, CityData, Unit, WindUnit, WeatherTone, WeatherCondition } from './types'
+import type { StaticCity, CityData, Unit, WindUnit, WeatherTone, WeatherCondition, WeatherAlert } from './types'
 import { CONDITIONS } from './utils/sky'
 import { conv } from './utils/temperature'
 import { LocaleContext } from './i18n/LocaleContext'
@@ -182,12 +182,13 @@ export default function App({ initialCity }: { initialCity?: string }) {
     },
   })
 
-  // Fetch NWS alerts (US-only; silently returns null for non-US)
-  const { data: alertData } = useQuery({
+  // Fetch alerts — NWS for US, MeteoAlarm proxy for Europe
+  const { data: alertData } = useQuery<WeatherAlert[]>({
     queryKey: ['alerts', currentStaticCity.latitude, currentStaticCity.longitude],
     queryFn: () => fetchAlerts(currentStaticCity.latitude, currentStaticCity.longitude),
     staleTime: 1000 * 60 * 15,
     retry: 0,
+    placeholderData: [],
   })
 
   // Notification permission state
@@ -204,32 +205,34 @@ export default function App({ initialCity }: { initialCity?: string }) {
     setNotifPermission(p)
   }, [])
 
-  // Merge live data + alert; fall back to static values if query not yet resolved
+  // Merge live data + alerts; fall back to static values if query not yet resolved
   const city: CityData = useMemo<CityData>(() => {
-    if (cityData) return { ...cityData, alert: alertData ?? null }
+    const alerts = alertData ?? []
+    if (cityData) return { ...cityData, alerts }
     const sc = currentStaticCity
     return {
       id: sc.id, name: sc.name, region: sc.region, cond: sc.cond,
       temp: sc.temp, hi: sc.hi, lo: sc.lo,
       time: '--:-- --', sunrise: 6, sunset: 20,
       det: { feels: sc.temp, uv: 3, uvLabel: 'Moderate', wind: 10, windDir: 'N', gust: 18, humidity: 60, pressure: 1013, visibility: 14, dew: sc.temp - 5, sunriseT: '6:00 AM', sunsetT: '8:00 PM', aqi: 25, aqiLabel: 'Good' },
-      alert: null, hourly: [], daily: [], latitude: sc.latitude, longitude: sc.longitude,
+      alerts: [], hourly: [], daily: [], latitude: sc.latitude, longitude: sc.longitude,
     }
   }, [cityData, currentStaticCity, alertData])
 
   // Notify on app open + on new alert — persisted across sessions via localStorage
   useEffect(() => {
-    if (!city.alert) return
-    const key = city.alert.kind + city.alert.until
+    const primary = city.alerts[0]
+    if (!primary) return
+    const key = primary.kind + primary.until
     if (key === getLastAlertKey()) return
     setLastAlertKey(key)
     if (notifPermission === 'granted') {
-      new Notification(`⚠️ ${city.alert.kind}`, {
-        body: city.alert.text.slice(0, 150),
+      new Notification(`⚠️ ${primary.kind}`, {
+        body: primary.text.slice(0, 150),
         icon: '/pwa-192.png',
       })
     }
-  }, [city.alert, notifPermission])
+  }, [city.alerts, notifPermission])
 
   // Condition-based alert: fire when weather changes to a watched condition
   useEffect(() => {
@@ -488,7 +491,7 @@ export default function App({ initialCity }: { initialCity?: string }) {
               tone={tone}
               accent={accent}
               onLocation={() => setView('cities')}
-              onBell={() => { if (city.alert) setAlertOpen(true) }}
+              onBell={() => { if (city.alerts.length) setAlertOpen(true) }}
               onSettings={() => setSettingsOpen(true)}
             />
           )}
@@ -506,9 +509,9 @@ export default function App({ initialCity }: { initialCity?: string }) {
 
       <PillNav view={view} setView={setView} tone={tone} accent={accent} />
 
-      {alertOpen && city.alert && (
+      {alertOpen && city.alerts.length > 0 && (
         <AlertSheet
-          alert={city.alert}
+          alerts={city.alerts}
           city={city}
           tone={tone}
           accent={accent}
