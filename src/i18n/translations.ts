@@ -74,6 +74,14 @@ export interface Translations {
   autoMode: string
   darkMode: string
   lightMode: string
+  // Settings sheet
+  settingsTitle: string
+  language: string
+  colorTheme: string
+  brightness: string
+  temperature: string
+  animations: string
+  share: string
 }
 
 const en: Translations = {
@@ -148,6 +156,13 @@ const en: Translations = {
   autoMode: '🌓 Auto',
   darkMode: '🌙 Dark',
   lightMode: '☀️ Light',
+  settingsTitle: 'Settings',
+  language: 'Language',
+  colorTheme: 'Color theme',
+  brightness: 'Brightness',
+  temperature: 'Temperature',
+  animations: 'Animations',
+  share: 'Share weather',
 }
 
 const bg: Translations = {
@@ -222,6 +237,13 @@ const bg: Translations = {
   autoMode: '🌓 Автом.',
   darkMode: '🌙 Тъмно',
   lightMode: '☀️ Светло',
+  settingsTitle: 'Настройки',
+  language: 'Език',
+  colorTheme: 'Цветова тема',
+  brightness: 'Яркост',
+  temperature: 'Температура',
+  animations: 'Анимации',
+  share: 'Споделяне',
 }
 
 export const translations: Record<Locale, Translations> = { en, bg }

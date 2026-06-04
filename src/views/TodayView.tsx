@@ -1,5 +1,6 @@
+import { useRef } from 'react'
 import type { CSSProperties } from 'react'
-import type { WeatherTone, CityData, Unit } from '../types'
+import type { WeatherTone, CityData, Unit, StaticCity } from '../types'
 import { toneStyles } from '../utils/sky'
 import type { SkyResult } from '../utils/sky'
 import { conv } from '../utils/temperature'
@@ -19,6 +20,9 @@ interface TodayViewProps {
   unit: Unit
   isLoading?: boolean
   onAlert: () => void
+  savedCities?: StaticCity[]
+  cityId?: string
+  onSwipe?: (dir: 'left' | 'right') => void
 }
 
 function LoadingSkeleton({ tone }: { tone: WeatherTone }) {
@@ -39,10 +43,28 @@ function LoadingSkeleton({ tone }: { tone: WeatherTone }) {
   )
 }
 
-export default function TodayView({ city, tone, accent, sky, unit, isLoading, onAlert }: TodayViewProps) {
+export default function TodayView({ city, tone, accent, sky, unit, isLoading, onAlert, savedCities = [], cityId, onSwipe }: TodayViewProps) {
   const t = toneStyles(tone)
   const tr = useT()
   const d = city.det
+
+  // Swipe detection on hero
+  const swipeX = useRef(0)
+  const swipeY = useRef(0)
+  function onTouchStart(e: React.TouchEvent) {
+    swipeX.current = e.touches[0].clientX
+    swipeY.current = e.touches[0].clientY
+  }
+  function onTouchEnd(e: React.TouchEvent) {
+    const dx = e.changedTouches[0].clientX - swipeX.current
+    const dy = e.changedTouches[0].clientY - swipeY.current
+    if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+      onSwipe?.(dx < 0 ? 'left' : 'right')
+    }
+  }
+
+  const currentIdx = savedCities.findIndex(c => c.id === cityId)
+  const showDots = savedCities.length > 1
 
   if (isLoading && city.hourly.length === 0) {
     return <LoadingSkeleton tone={tone} />
@@ -53,7 +75,11 @@ export default function TodayView({ city, tone, accent, sky, unit, isLoading, on
       {city.alert && <AlertBanner alert={city.alert} tone={tone} onClick={onAlert} />}
 
       {/* Hero */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '6px 0 10px' }}>
+      <div
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '6px 0 10px' }}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
         <div className="hero-rise" style={{ marginBottom: 2 }}>
           <WeatherScene kind={sky.particle} size={210} />
         </div>
@@ -71,6 +97,20 @@ export default function TodayView({ city, tone, accent, sky, unit, isLoading, on
           <span>L:{conv(city.lo, unit)}°</span>
           <span>{tr.feelsLike} {conv(d.feels, unit)}°</span>
         </div>
+
+        {/* City swipe dots */}
+        {showDots && (
+          <div className="hero-rise" style={{ display: 'flex', gap: 6, marginTop: 14, animationDelay: '.18s' }}>
+            {savedCities.map((c, i) => (
+              <div key={c.id} style={{
+                width: i === currentIdx ? 18 : 6,
+                height: 6, borderRadius: 3,
+                background: i === currentIdx ? accent : t.faint,
+                transition: 'all .3s cubic-bezier(.4,0,.2,1)',
+              }} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Hourly */}

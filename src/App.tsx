@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { skyFor, toneStyles, THEMES } from './utils/sky'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { skyFor, toneStyles } from './utils/sky'
 import { fetchCityData, fetchAlerts, reverseGeocode } from './api/weather'
 import type { StaticCity, CityData, Unit, WeatherTone, WeatherCondition } from './types'
 import { CONDITIONS } from './utils/sky'
@@ -11,6 +11,7 @@ import Onboarding from './components/Onboarding'
 import TopBar from './components/TopBar'
 import PillNav from './components/PillNav'
 import AlertSheet from './components/AlertSheet'
+import SettingsSheet from './components/SettingsSheet'
 import ErrorBoundary from './components/ErrorBoundary'
 
 const TodayView    = lazy(() => import('./views/TodayView'))
@@ -69,8 +70,16 @@ export default function App() {
   const [cityId, setCityId] = useState<string>(() => LS.get('cityId', PRESET_CITIES[0].id))
   const [savedCities, setSavedCities] = useState<StaticCity[]>(() => LS.get('savedCities', PRESET_CITIES))
   const [alertOpen, setAlertOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [motionOff, setMotionOff] = useState(false)
   const [locale, setLocale] = useState<Locale>(() => LS.get('locale', 'en'))
+  // Pull-to-refresh
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const pullStartY = useRef(0)
+  const [pullDist, setPullDist] = useState(0)
+  const [refreshing, setRefreshing] = useState(false)
+  const queryClient = useQueryClient()
+  const PULL_THRESHOLD = 72
   type ToneOverride = 'auto' | 'dark' | 'light'
   const [toneOverride, setToneOverride] = useState<ToneOverride>(() => LS.get('toneOverride', 'auto'))
   const [toast, setToast] = useState<string | null>(null)
@@ -268,6 +277,42 @@ export default function App() {
     if (target === 'cities') setView('cities')
   }, [])
 
+  // Pull-to-refresh handlers
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if ((scrollRef.current?.scrollTop ?? 1) === 0) {
+      pullStartY.current = e.touches[0].clientY
+    }
+  }, [])
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if ((scrollRef.current?.scrollTop ?? 1) > 0) return
+    const dy = e.touches[0].clientY - pullStartY.current
+    if (dy > 0) setPullDist(Math.min(dy * 0.45, PULL_THRESHOLD))
+  }, [])
+
+  const handleTouchEnd = useCallback(async () => {
+    if (pullDist >= PULL_THRESHOLD * 0.85) {
+      setRefreshing(true)
+      await queryClient.invalidateQueries({ queryKey: ['cityData'] })
+      await queryClient.invalidateQueries({ queryKey: ['alerts'] })
+      setRefreshing(false)
+    }
+    setPullDist(0)
+  }, [pullDist, queryClient])
+
+  // Swipe between saved cities
+  const handleCitySwipe = useCallback((dir: 'left' | 'right') => {
+    setSavedCities(prev => {
+      const idx = prev.findIndex(c => c.id === cityId)
+      if (prev.length < 2) return prev
+      const next = dir === 'left'
+        ? (idx + 1) % prev.length
+        : (idx - 1 + prev.length) % prev.length
+      setCityId(prev[next].id)
+      return prev
+    })
+  }, [cityId])
+
   const showToast = useCallback((msg: string) => {
     setToast(msg)
     if (toastTimer.current) clearTimeout(toastTimer.current)
@@ -298,7 +343,7 @@ export default function App() {
   const renderView = () => {
     switch (view) {
       case 'today':
-        return <TodayView city={city} tone={tone} accent={accent} sky={sky} unit={unit} isLoading={cityLoading} onAlert={() => setAlertOpen(true)} />
+        return <TodayView city={city} tone={tone} accent={accent} sky={sky} unit={unit} isLoading={cityLoading} onAlert={() => setAlertOpen(true)} savedCities={savedCities} cityId={cityId} onSwipe={handleCitySwipe} />
       case 'forecast':
         return <ForecastView city={city} tone={tone} accent={accent} unit={unit} />
       case 'radar':
@@ -318,7 +363,7 @@ export default function App() {
           />
         )
       default:
-        return <TodayView city={city} tone={tone} accent={accent} sky={sky} unit={unit} isLoading={cityLoading} onAlert={() => setAlertOpen(true)} />
+        return <TodayView city={city} tone={tone} accent={accent} sky={sky} unit={unit} isLoading={cityLoading} onAlert={() => setAlertOpen(true)} savedCities={savedCities} cityId={cityId} onSwipe={handleCitySwipe} />
     }
   }
 
@@ -337,7 +382,38 @@ export default function App() {
       ))}
 
       {/* Content */}
-      <div className="app-scroll" style={{ position: 'relative', zIndex: 1, color: t.text }}>
+      {/* Pull-to-refresh spinner */}
+      {(pullDist > 0 || refreshing) && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+          display: 'flex', justifyContent: 'center',
+          transform: `translateY(${refreshing ? 16 : pullDist - 28}px)`,
+          transition: refreshing ? 'transform .2s' : 'none',
+          pointerEvents: 'none',
+        }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 18,
+            background: t.cardBg, border: `1px solid ${t.cardBorder}`,
+            backdropFilter: 'blur(12px)', display: 'grid', placeItems: 'center',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+          }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" style={{ color: t.dim, animation: refreshing ? 'spinRays 0.7s linear infinite' : 'none' }}>
+              <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2.5"
+                strokeDasharray={`${(refreshing ? 1 : pullDist / PULL_THRESHOLD) * 56.5} 56.5`}
+                strokeLinecap="round" transform="rotate(-90 12 12)" />
+            </svg>
+          </div>
+        </div>
+      )}
+
+      <div
+        ref={scrollRef}
+        className="app-scroll"
+        style={{ position: 'relative', zIndex: 1, color: t.text }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <div className="app-container">
           {view !== 'cities' && (
             <TopBar
@@ -347,78 +423,9 @@ export default function App() {
               unit={unit}
               onLocation={() => setView('cities')}
               onBell={() => { if (city.alert) setAlertOpen(true) }}
-              onUnitToggle={toggleUnit}
-              onShare={handleShare}
+              onSettings={() => setSettingsOpen(true)}
             />
           )}
-
-          {/* Theme switcher strip */}
-          <div style={{ display: 'flex', gap: 6, padding: '8px 0', overflowX: 'auto' }} className="hide-scroll">
-            {Object.keys(THEMES).map(tk => {
-              const s = skyFor('partly-cloudy-day', tk)
-              const active = themeKey === tk
-              return (
-                <button key={tk} onClick={() => setThemeKey(tk)} className="press" style={{
-                  flexShrink: 0,
-                  display: 'flex', alignItems: 'center', gap: 5,
-                  padding: '5px 10px', borderRadius: 12,
-                  border: active ? `1.5px solid ${accent}` : `1px solid ${t.cardBorder}`,
-                  background: active ? t.cardBg : 'transparent',
-                  color: t.text,
-                  cursor: 'pointer',
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                }}>
-                  <div style={{ width: 14, height: 14, borderRadius: 4, background: s.gradient, border: '1px solid rgba(255,255,255,0.3)' }} />
-                  <span style={{ fontSize: 11.5, fontWeight: 700 }}>{tk}</span>
-                </button>
-              )
-            })}
-            <button
-              onClick={() => setToneOverride(o => o === 'auto' ? 'dark' : o === 'dark' ? 'light' : 'auto')}
-              className="press"
-              aria-label={`Brightness: ${toneOverride}`}
-              style={{
-                flexShrink: 0, padding: '5px 10px', borderRadius: 12,
-                border: toneOverride !== 'auto' ? `1.5px solid ${accent}` : `1px solid ${t.cardBorder}`,
-                background: toneOverride !== 'auto' ? t.cardBg : 'transparent',
-                color: t.text, cursor: 'pointer',
-                backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-                fontSize: 11.5, fontWeight: 700,
-              }}
-            >
-              {toneOverride === 'dark' ? translations[locale].darkMode : toneOverride === 'light' ? translations[locale].lightMode : translations[locale].autoMode}
-            </button>
-            <button onClick={() => setMotionOff(v => !v)} className="press" style={{
-              flexShrink: 0, padding: '5px 10px', borderRadius: 12,
-              border: `1px solid ${t.cardBorder}`,
-              background: motionOff ? t.cardBg : 'transparent',
-              color: t.text, cursor: 'pointer',
-              backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-              fontSize: 11.5, fontWeight: 700,
-            }}>
-              {motionOff ? translations[locale].animOff : translations[locale].animOn}
-            </button>
-
-            {/* Language toggle */}
-            <div style={{
-              flexShrink: 0, display: 'flex', borderRadius: 12,
-              background: t.cardBg, border: `1px solid ${t.cardBorder}`,
-              backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-              padding: 3, gap: 2,
-            }}>
-              {(['en', 'bg'] as Locale[]).map(l => (
-                <button key={l} onClick={() => setLocale(l)} className="press" style={{
-                  padding: '3px 9px', borderRadius: 9, border: 'none', cursor: 'pointer',
-                  background: locale === l ? accent : 'transparent',
-                  color: locale === l ? '#fff' : t.dim,
-                  fontSize: 11.5, fontWeight: 800, transition: 'all .2s',
-                }}>
-                  {l.toUpperCase()}
-                </button>
-              ))}
-            </div>
-          </div>
 
           <ErrorBoundary resetKey={view}>
             <Suspense fallback={<ViewSkeleton tone={tone} />}>
@@ -442,6 +449,23 @@ export default function App() {
           notifPermission={notifPermission}
           onEnableNotif={requestNotifPermission}
           onClose={() => setAlertOpen(false)}
+        />
+      )}
+
+      {settingsOpen && (
+        <SettingsSheet
+          tone={tone}
+          accent={accent}
+          unit={unit}
+          themeKey={themeKey}
+          toneOverride={toneOverride}
+          motionOff={motionOff}
+          onUnitToggle={toggleUnit}
+          onTheme={setThemeKey}
+          onToneOverride={setToneOverride}
+          onMotionToggle={() => setMotionOff(v => !v)}
+          onShare={handleShare}
+          onClose={() => setSettingsOpen(false)}
         />
       )}
 
