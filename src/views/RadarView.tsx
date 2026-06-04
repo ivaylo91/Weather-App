@@ -7,7 +7,8 @@ import { useT } from '../i18n/LocaleContext'
 import { Card } from '../components/Card'
 import Icon from '../components/Icon'
 
-const ZOOM = 7
+const MIN_ZOOM = 5
+const MAX_ZOOM = 10
 const TILE_SIZE = 256
 
 function latLonToFrac(lat: number, lon: number, z: number) {
@@ -39,6 +40,9 @@ export default function RadarView({ city, tone, accent }: RadarViewProps) {
   const [frameIdx, setFrameIdx] = useState(0)
   const [playing, setPlaying] = useState(true)
   const [layer, setLayer] = useState<Layer>('precip')
+  const [zoom, setZoom] = useState(7)
+  const pinchStartDist = useRef(0)
+  const pinchStartZoom = useRef(7)
 
   const { data: radarData } = useQuery({
     queryKey: ['radarFrames'],
@@ -92,9 +96,26 @@ export default function RadarView({ city, tone, accent }: RadarViewProps) {
     return () => ro.disconnect()
   }, [])
 
-  const { fracX, fracY } = latLonToFrac(city.latitude, city.longitude, ZOOM)
+  const { fracX, fracY } = latLonToFrac(city.latitude, city.longitude, zoom)
   const cTileX = Math.floor(fracX)
   const cTileY = Math.floor(fracY)
+
+  // Pinch-to-zoom handlers
+  function getTouchDist(e: React.TouchEvent) {
+    const [a, b] = [e.touches[0], e.touches[1]]
+    return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)
+  }
+  function onPinchStart(e: React.TouchEvent) {
+    if (e.touches.length !== 2) return
+    pinchStartDist.current = getTouchDist(e)
+    pinchStartZoom.current = zoom
+  }
+  function onPinchMove(e: React.TouchEvent) {
+    if (e.touches.length !== 2) return
+    const ratio = getTouchDist(e) / pinchStartDist.current
+    const newZoom = Math.round(pinchStartZoom.current + Math.log2(ratio))
+    setZoom(Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom)))
+  }
   const cityPxX = (fracX - cTileX) * TILE_SIZE
   const cityPxY = (fracY - cTileY) * TILE_SIZE
   const originX = dims.w / 2 - cityPxX
@@ -121,13 +142,15 @@ export default function RadarView({ city, tone, accent }: RadarViewProps) {
       <Card tone={tone} pad={0} style={{ overflow: 'hidden' }}>
         <div
           ref={containerRef}
-          style={{ position: 'relative', overflow: 'hidden', width: '100%', aspectRatio: '1 / 1.05', background: '#0f1828' }}
+          onTouchStart={onPinchStart}
+          onTouchMove={onPinchMove}
+          style={{ position: 'relative', overflow: 'hidden', width: '100%', aspectRatio: '1 / 1.05', background: '#0f1828', touchAction: 'none' }}
         >
           {/* Map tiles */}
           {tiles.map(tile => (
             <div key={tile.key} style={{ position: 'absolute', left: tile.left, top: tile.top, width: TILE_SIZE, height: TILE_SIZE }}>
               <img
-                src={`https://a.basemaps.cartocdn.com/dark_all/${ZOOM}/${tile.tileX}/${tile.tileY}.png`}
+                src={`https://a.basemaps.cartocdn.com/dark_all/${zoom}/${tile.tileX}/${tile.tileY}.png`}
                 width={TILE_SIZE} height={TILE_SIZE}
                 style={{ display: 'block', pointerEvents: 'none' }}
                 alt=""
@@ -137,8 +160,8 @@ export default function RadarView({ city, tone, accent }: RadarViewProps) {
                 <img
                   key={currentFrame.path + layer}
                   src={layer === 'satellite'
-                    ? `${radarData.host}${currentFrame.path}/256/${ZOOM}/${tile.tileX}/${tile.tileY}/0/0_0.png`
-                    : `${radarData.host}${currentFrame.path}/256/${ZOOM}/${tile.tileX}/${tile.tileY}/2/1_1.png`}
+                    ? `${radarData.host}${currentFrame.path}/256/${zoom}/${tile.tileX}/${tile.tileY}/0/0_0.png`
+                    : `${radarData.host}${currentFrame.path}/256/${zoom}/${tile.tileX}/${tile.tileY}/2/1_1.png`}
                   width={TILE_SIZE} height={TILE_SIZE}
                   style={{ position: 'absolute', top: 0, left: 0, opacity: 0.65, display: 'block', pointerEvents: 'none' }}
                   alt=""
@@ -146,6 +169,11 @@ export default function RadarView({ city, tone, accent }: RadarViewProps) {
               )}
             </div>
           ))}
+
+          {/* Zoom level badge */}
+          <div style={{ position: 'absolute', bottom: 54, right: 16, zIndex: 10, background: 'rgba(8,14,28,0.65)', borderRadius: 8, padding: '3px 8px', color: 'rgba(255,255,255,0.65)', fontSize: 11, fontWeight: 700, backdropFilter: 'blur(6px)' }}>
+            {zoom}×
+          </div>
 
           {/* City pin */}
           <div style={{ position: 'absolute', left: dims.w / 2, top: dims.h / 2, transform: 'translate(-50%,-100%)', zIndex: 10 }}>

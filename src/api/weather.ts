@@ -304,3 +304,32 @@ export async function reverseGeocode(lat: number, lon: number): Promise<{ city: 
     return { city: 'Your Location', region: '' }
   }
 }
+
+// ---- 30-day historical weather ----
+export interface HistoricalDay {
+  date: string
+  max: number
+  min: number
+}
+
+export async function fetchHistoricalWeather(lat: number, lon: number): Promise<HistoricalDay[]> {
+  const end = new Date()
+  end.setDate(end.getDate() - 1) // yesterday (today not yet complete)
+  const start = new Date(end)
+  start.setDate(start.getDate() - 29) // 30 days back
+  const fmt = (d: Date) => d.toISOString().split('T')[0]
+
+  const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}` +
+    `&start_date=${fmt(start)}&end_date=${fmt(end)}` +
+    `&daily=temperature_2m_max,temperature_2m_min&timezone=auto`
+
+  const res = await fetch(url)
+  if (!res.ok) throw new Error('Failed to fetch historical weather')
+  const data = await res.json()
+
+  return (data.daily?.time ?? []).map((date: string, i: number) => ({
+    date,
+    max: Math.round(data.daily.temperature_2m_max[i] ?? 0),
+    min: Math.round(data.daily.temperature_2m_min[i] ?? 0),
+  }))
+}

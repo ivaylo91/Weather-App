@@ -11,6 +11,7 @@ import HourlyStrip from '../components/HourlyStrip'
 import DailyList from '../components/DailyList'
 import AlertBanner from '../components/AlertBanner'
 import { SunArc, UVCard, WindCard, DetailCard } from '../components/DetailCards'
+import HistorySparkline from '../components/HistorySparkline'
 
 interface TodayViewProps {
   city: CityData
@@ -146,6 +147,17 @@ export default function TodayView({ city, tone, accent, sky, unit, isLoading, on
           <DetailCard tone={tone} accent={accent} icon="gauge" label={tr.pressure} value={d.pressure} unit="hPa" sub={tr.pressureSub(d.pressure)} />
           <DetailCard tone={tone} accent={accent} icon="leaf" label={tr.airQuality} value={d.aqi} sub={tr.aqi(d.aqi)} />
         </div>
+      )}
+
+      {/* 30-day history sparkline */}
+      {city.daily.length > 0 && (
+        <HistorySparkline
+          lat={city.latitude}
+          lon={city.longitude}
+          tone={tone}
+          accent={accent}
+          unit={unit}
+        />
       )}
     </div>
   )

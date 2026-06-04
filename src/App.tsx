@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } fro
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { skyFor, toneStyles } from './utils/sky'
 import { fetchCityData, fetchAlerts, fetchCitySuggestions, reverseGeocode } from './api/weather'
+import { shareWeatherImage } from './utils/shareImage'
 import type { StaticCity, CityData, Unit, WindUnit, WeatherTone, WeatherCondition } from './types'
 import { CONDITIONS } from './utils/sky'
 import { conv } from './utils/temperature'
@@ -198,11 +199,18 @@ export default function App({ initialCity }: { initialCity?: string }) {
     setNotifPermission(p)
   }, [])
 
-  // placeholderData ensures cityData is always defined; just inject the live alert
-  const city: CityData = useMemo<CityData>(
-    () => ({ ...cityData!, alert: alertData ?? null }),
-    [cityData, alertData]
-  )
+  // Merge live data + alert; fall back to static values if query not yet resolved
+  const city: CityData = useMemo<CityData>(() => {
+    if (cityData) return { ...cityData, alert: alertData ?? null }
+    const sc = currentStaticCity
+    return {
+      id: sc.id, name: sc.name, region: sc.region, cond: sc.cond,
+      temp: sc.temp, hi: sc.hi, lo: sc.lo,
+      time: '--:-- --', sunrise: 6, sunset: 20,
+      det: { feels: sc.temp, uv: 3, uvLabel: 'Moderate', wind: 10, windDir: 'N', gust: 18, humidity: 60, pressure: 1013, visibility: 14, dew: sc.temp - 5, sunriseT: '6:00 AM', sunsetT: '8:00 PM', aqi: 25, aqiLabel: 'Good' },
+      alert: null, hourly: [], daily: [], latitude: sc.latitude, longitude: sc.longitude,
+    }
+  }, [cityData, currentStaticCity, alertData])
 
   // Show browser notification when a new alert is detected
   useEffect(() => {
@@ -358,18 +366,9 @@ export default function App({ initialCity }: { initialCity?: string }) {
 
   const handleShare = useCallback(async () => {
     const condLabel = CONDITIONS[city.cond as WeatherCondition]?.label ?? ''
-    const text = `${city.name}: ${conv(city.temp, unit)}°${unit} ${condLabel}. H:${conv(city.hi, unit)}° L:${conv(city.lo, unit)}°`
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: `Weather in ${city.name}`, text, url: window.location.href })
-      } else {
-        await navigator.clipboard.writeText(text)
-        showToast(translations[locale].copiedToClipboard)
-      }
-    } catch {
-      // user cancelled
-    }
-  }, [city, unit, showToast])
+    const fallbackText = `${city.name}: ${conv(city.temp, unit)}°${unit} ${condLabel}. H:${conv(city.hi, unit)}° L:${conv(city.lo, unit)}°`
+    await shareWeatherImage(city, unit, translations[locale], fallbackText, showToast)
+  }, [city, unit, locale, showToast])
 
   if (!onboarded) {
     return <Onboarding themeKey={themeKey} onDone={handleDoneOnboarding} />
