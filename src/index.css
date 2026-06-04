@@ -105,7 +105,44 @@ input { font-family: inherit; }
 /* hero entrance */
 @keyframes heroRise { 0% { opacity: 0; transform: translateY(18px); } 100% { opacity: 1; transform: translateY(0); } }
 
+/* ---- full-screen background scene animations ---- */
+.bg-rain  { animation: bgRain  linear infinite; }
+.bg-snow  { animation: bgSnow  linear infinite; }
+.bg-star  { animation: bgStar  ease-in-out infinite alternate; }
+.bg-cloud { animation: bgCloud ease-in-out infinite alternate; }
+.bg-beam  { animation: bgBeam  linear infinite; }
+
+@keyframes bgRain {
+  0%   { transform: translateY(-60px); opacity: 0; }
+  8%   { opacity: 1; }
+  92%  { opacity: 0.8; }
+  100% { transform: translateY(110vh); opacity: 0; }
+}
+@keyframes bgSnow {
+  0%   { transform: translate(0, -30px); opacity: 0; }
+  10%  { opacity: 0.9; }
+  50%  { transform: translate(10px, 50vh); }
+  90%  { opacity: 0.9; }
+  100% { transform: translate(-8px, 108vh); opacity: 0; }
+}
+@keyframes bgStar {
+  0%   { opacity: 0.1; }
+  100% { opacity: 0.8; }
+}
+@keyframes bgCloud {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(30px); }
+}
+@keyframes bgBeam {
+  to { transform: rotate(360deg); }
+}
+
 /* ---- motion kill switch ---- */
+body[data-noanim="1"] .bg-rain,
+body[data-noanim="1"] .bg-snow,
+body[data-noanim="1"] .bg-star,
+body[data-noanim="1"] .bg-cloud,
+body[data-noanim="1"] .bg-beam,
 body[data-noanim="1"] .sun-rays,
 body[data-noanim="1"] .sun-glow,
 body[data-noanim="1"] .twinkle,

@@ -15,6 +15,7 @@ import AlertSheet from './components/AlertSheet'
 import SettingsSheet from './components/SettingsSheet'
 import ErrorBoundary from './components/ErrorBoundary'
 import InstallBanner from './components/InstallBanner'
+import BackgroundScene from './components/BackgroundScene'
 
 const TodayView    = lazy(() => import('./views/TodayView'))
 const ForecastView = lazy(() => import('./views/ForecastView'))
@@ -456,6 +457,9 @@ export default function App({ initialCity }: { initialCity?: string }) {
           style={{ background: g }}
         />
       ))}
+
+      {/* Dynamic weather background — rain, snow, clouds, sun, stars */}
+      <BackgroundScene cond={city.cond} />
 
       {/* Content */}
       {/* Pull-to-refresh spinner */}
