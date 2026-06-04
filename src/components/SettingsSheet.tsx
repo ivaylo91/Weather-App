@@ -91,7 +91,7 @@ export default function SettingsSheet({
             <Icon name="settings" size={20} stroke={2.2} style={{ color: accent }} />
             <span style={{ fontSize: 20, fontWeight: 800 }}>{tr.settingsTitle}</span>
           </div>
-          <button onClick={onClose} className="press" style={{ width: 34, height: 34, borderRadius: 17, border: 'none', background: rowBg, color: fg, cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
+          <button onClick={onClose} aria-label="Close settings" className="press" style={{ width: 34, height: 34, borderRadius: 17, border: 'none', background: rowBg, color: fg, cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
             <Icon name="close" size={17} stroke={2.4} />
           </button>
         </div>

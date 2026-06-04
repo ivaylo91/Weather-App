@@ -92,8 +92,6 @@ test('settings sheet opens and closes', async ({ page }) => {
   await ready(page)
   await page.click('button[aria-label="Settings"]')
   await expect(page.locator('text=Settings')).toBeVisible()
-  await page.click('button[aria-label*="Close"], button:has-text("✕")').catch(() =>
-    page.locator('div[style*="rgba(12,18,34"]').click()
-  )
+  await page.click('button[aria-label="Close settings"]')
   await expect(page.locator('text=Settings')).not.toBeVisible({ timeout: 2000 })
 })

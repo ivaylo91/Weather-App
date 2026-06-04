@@ -148,7 +148,9 @@ export default function App({ initialCity }: { initialCity?: string }) {
   useEffect(() => { LS.set('alertOnSnow', alertOnSnow) }, [alertOnSnow])
   const toggleUnit = useCallback(() => setUnit(u => u === 'C' ? 'F' : 'C'), [])
 
-  // Fetch live weather for current city
+  // Fetch live weather for current city.
+  // placeholderData shows the static city values instantly while the real
+  // fetch completes, eliminating the blank flash on city switch.
   const { data: cityData, isLoading: cityLoading } = useQuery<CityData>({
     queryKey: ['cityData', currentStaticCity.latitude, currentStaticCity.longitude],
     queryFn: () => fetchCityData(
@@ -159,6 +161,21 @@ export default function App({ initialCity }: { initialCity?: string }) {
       currentStaticCity.id,
     ),
     staleTime: 1000 * 60 * 10,
+    placeholderData: {
+      id: currentStaticCity.id,
+      name: currentStaticCity.name,
+      region: currentStaticCity.region,
+      cond: currentStaticCity.cond,
+      temp: currentStaticCity.temp,
+      hi: currentStaticCity.hi,
+      lo: currentStaticCity.lo,
+      time: '--:-- --',
+      sunrise: 6, sunset: 20,
+      det: { feels: currentStaticCity.temp, uv: 3, uvLabel: 'Moderate', wind: 10, windDir: 'N', gust: 18, humidity: 60, pressure: 1013, visibility: 14, dew: currentStaticCity.temp - 5, sunriseT: '6:00 AM', sunsetT: '8:00 PM', aqi: 25, aqiLabel: 'Good' },
+      alert: null, hourly: [], daily: [],
+      latitude: currentStaticCity.latitude,
+      longitude: currentStaticCity.longitude,
+    },
   })
 
   // Fetch NWS alerts (US-only; silently returns null for non-US)
@@ -181,46 +198,11 @@ export default function App({ initialCity }: { initialCity?: string }) {
     setNotifPermission(p)
   }, [])
 
-  // Merge: live data overrides static where available
-  const city: CityData = useMemo<CityData>(() => {
-    const alert = alertData ?? null
-    if (cityData) return { ...cityData, alert }
-    // Fallback: construct a minimal CityData from static city
-    const sc = currentStaticCity
-    return {
-      id: sc.id,
-      name: sc.name,
-      region: sc.region,
-      cond: sc.cond,
-      temp: sc.temp,
-      hi: sc.hi,
-      lo: sc.lo,
-      time: '--:-- --',
-      sunrise: 6,
-      sunset: 20,
-      det: {
-        feels: sc.temp,
-        uv: 3,
-        uvLabel: 'Moderate',
-        wind: 10,
-        windDir: 'N',
-        gust: 18,
-        humidity: 60,
-        pressure: 1013,
-        visibility: 14,
-        dew: sc.temp - 5,
-        sunriseT: '6:00 AM',
-        sunsetT: '8:00 PM',
-        aqi: 25,
-        aqiLabel: 'Good',
-      },
-      alert: alertData ?? null,
-      hourly: [],
-      daily: [],
-      latitude: sc.latitude,
-      longitude: sc.longitude,
-    }
-  }, [cityData, currentStaticCity, alertData])
+  // placeholderData ensures cityData is always defined; just inject the live alert
+  const city: CityData = useMemo<CityData>(
+    () => ({ ...cityData!, alert: alertData ?? null }),
+    [cityData, alertData]
+  )
 
   // Show browser notification when a new alert is detected
   useEffect(() => {
@@ -277,6 +259,23 @@ export default function App({ initialCity }: { initialCity?: string }) {
   useEffect(() => {
     document.body.setAttribute('data-noanim', motionOff ? '1' : '')
   }, [motionOff])
+
+  // Refresh when user returns to tab after ≥10 min away
+  useEffect(() => {
+    const STALE_MS = 10 * 60 * 1000
+    let hiddenAt = 0
+    const onVisibility = () => {
+      if (document.hidden) {
+        hiddenAt = Date.now()
+      } else if (hiddenAt && Date.now() - hiddenAt >= STALE_MS) {
+        queryClient.invalidateQueries({ queryKey: ['cityData'] })
+        queryClient.invalidateQueries({ queryKey: ['alerts'] })
+        queryClient.invalidateQueries({ queryKey: ['radarFrames'] })
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [queryClient])
 
   // Handlers
   const handleSelectCity = useCallback((id: string) => {
