@@ -24,9 +24,9 @@ function safeEmoji(raw: string | null): string {
 export default function handler(request: Request): ImageResponse {
   const { searchParams } = new URL(request.url)
 
-  const city  = searchParams.get('city')  ?? 'Sora Weather'
+  const city  = searchParams.get('city')  ?? 'Времето днес'
   const temp  = searchParams.get('temp')  ?? ''
-  const cond  = searchParams.get('cond')  ?? 'Real-time forecasts'
+  const cond  = searchParams.get('cond')  ?? 'Прогноза на времето'
   const emoji = safeEmoji(searchParams.get('emoji'))
   const c1    = searchParams.get('c1')    ?? '#1d4ed8'
   const c2    = searchParams.get('c2')    ?? '#0ea5e9'
@@ -69,7 +69,7 @@ export default function handler(request: Request): ImageResponse {
           position: 'absolute', bottom: 36, right: 52,
           fontSize: 20, color: 'rgba(255,255,255,0.35)', fontWeight: 600,
         },
-      }, 'Sora Weather'),
+      }, 'Времето днес'),
     ]),
     { width: 1200, height: 630 },
   )

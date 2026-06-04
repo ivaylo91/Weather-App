@@ -79,7 +79,7 @@ export default function Onboarding({ themeKey, onDone }: OnboardingProps) {
                 </g>
               </svg>
             </span>
-            Sora
+            Времето днес
           </div>
           {!isPerm && (
             <button onClick={() => onDone()} className="press" style={{ border: 'none', background: 'none', color: t.dim, fontWeight: 700, fontSize: 14.5, cursor: 'pointer' }}>

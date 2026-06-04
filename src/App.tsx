@@ -80,7 +80,7 @@ export default function App({ initialCity }: { initialCity?: string }) {
   type BeforeInstallPromptEvent = Event & { prompt(): Promise<void>; userChoice: Promise<{ outcome: string }> }
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showInstall, setShowInstall] = useState(false)
-  const [locale, setLocale] = useState<Locale>(() => LS.get('locale', 'en'))
+  const [locale, setLocale] = useState<Locale>(() => LS.get('locale', 'bg'))
   // Pull-to-refresh
   const scrollRef = useRef<HTMLDivElement>(null)
   const pullStartY = useRef(0)
@@ -404,8 +404,14 @@ export default function App({ initialCity }: { initialCity?: string }) {
     await shareWeatherImage(city, unit, translations[locale], fallbackText, showToast)
   }, [city, unit, locale, showToast])
 
+  // Onboarding needs the locale context so its text respects the active language
   if (!onboarded) {
-    return <Onboarding themeKey={themeKey} onDone={handleDoneOnboarding} />
+    const localeCtx = { locale, setLocale, t: translations[locale] }
+    return (
+      <LocaleContext.Provider value={localeCtx}>
+        <Onboarding themeKey={themeKey} onDone={handleDoneOnboarding} />
+      </LocaleContext.Provider>
+    )
   }
 
   const t = toneStyles(tone)

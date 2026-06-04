@@ -52,7 +52,7 @@ function buildSVG(city: CityData, unit: Unit, tr: Translations): string {
   <!-- Condition + H/L -->
   <text x="480" y="310" font-family="system-ui,-apple-system,sans-serif" font-size="22" fill="rgba(255,255,255,0.7)" text-anchor="middle">${cond} · H:${hi}° L:${lo}°</text>
   <!-- Branding -->
-  <text x="776" y="400" font-family="system-ui,-apple-system,sans-serif" font-size="16" fill="rgba(255,255,255,0.35)" text-anchor="end">Sora Weather</text>
+  <text x="776" y="400" font-family="system-ui,-apple-system,sans-serif" font-size="16" fill="rgba(255,255,255,0.35)" text-anchor="end">Времето днес</text>
 </svg>`
 }
 

@@ -40,7 +40,7 @@ export default function WidgetView({ data, unit = 'C', size = 'md' }: WidgetView
           <div style={{ fontSize: 15, fontWeight: 700, opacity: 0.85 }}>{data.cond.replace(/-/g, ' ')}</div>
           <div style={{ fontSize: 12, opacity: 0.6, marginTop: 2 }}>H:{hi}° L:{lo}°</div>
         </div>
-        <div style={{ position: 'absolute', bottom: 6, right: 10, fontSize: 9, opacity: 0.35, fontWeight: 600 }}>Sora Weather</div>
+        <div style={{ position: 'absolute', bottom: 6, right: 10, fontSize: 9, opacity: 0.35, fontWeight: 600 }}>Времето днес</div>
       </div>
     )
   }
@@ -81,7 +81,7 @@ export default function WidgetView({ data, unit = 'C', size = 'md' }: WidgetView
             </div>
           ))}
         </div>
-        <div style={{ position: 'absolute', bottom: 14, right: 20, fontSize: 12, opacity: 0.35, fontWeight: 600 }}>Sora Weather</div>
+        <div style={{ position: 'absolute', bottom: 14, right: 20, fontSize: 12, opacity: 0.35, fontWeight: 600 }}>Времето днес</div>
       </div>
     )
   }
@@ -108,7 +108,7 @@ export default function WidgetView({ data, unit = 'C', size = 'md' }: WidgetView
           <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.65, marginTop: 4 }}>H:{hi}° · L:{lo}°</div>
         </div>
       </div>
-      <div style={{ position: 'absolute', bottom: 10, right: 14, fontSize: 11, opacity: 0.4, fontWeight: 600, color: t.text }}>Sora Weather</div>
+      <div style={{ position: 'absolute', bottom: 10, right: 14, fontSize: 11, opacity: 0.4, fontWeight: 600, color: t.text }}>Времето днес</div>
     </div>
   )
 }
