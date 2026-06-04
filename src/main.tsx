@@ -7,11 +7,12 @@ import Widget from './Widget.tsx'
 
 const queryClient = new QueryClient()
 const isWidget = window.location.hash === '#widget'
+const cityParam = new URLSearchParams(window.location.search).get('city') ?? undefined
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      {isWidget ? <Widget /> : <App />}
+      {isWidget ? <Widget /> : <App initialCity={cityParam} />}
     </QueryClientProvider>
   </StrictMode>,
 )

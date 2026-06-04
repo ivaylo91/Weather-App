@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { skyFor, toneStyles } from './utils/sky'
-import { fetchCityData, fetchAlerts, reverseGeocode } from './api/weather'
+import { fetchCityData, fetchAlerts, fetchCitySuggestions, reverseGeocode } from './api/weather'
 import type { StaticCity, CityData, Unit, WindUnit, WeatherTone, WeatherCondition } from './types'
 import { CONDITIONS } from './utils/sky'
 import { conv } from './utils/temperature'
@@ -61,13 +61,16 @@ function makeId(lat: number, lon: number): string {
   return `geo_${Math.round(lat * 100)}_${Math.round(lon * 100)}`
 }
 
-export default function App() {
+export default function App({ initialCity }: { initialCity?: string }) {
   // Persistent state
   const [onboarded, setOnboarded] = useState<boolean>(() => LS.get('onboarded', false))
   const [view, setView] = useState<string>(() => LS.get('view', 'today'))
   const [themeKey, setThemeKey] = useState<string>(() => LS.get('themeKey', 'Sky'))
   const [unit, setUnit] = useState<Unit>(() => LS.get('unit', 'C'))
   const [windUnit, setWindUnit] = useState<WindUnit>(() => LS.get('windUnit', 'kmh'))
+  const [alertOnRain, setAlertOnRain] = useState<boolean>(() => LS.get('alertOnRain', false))
+  const [alertOnSnow, setAlertOnSnow] = useState<boolean>(() => LS.get('alertOnSnow', false))
+  const lastCondRef = useRef<string | null>(null)
   const [cityId, setCityId] = useState<string>(() => LS.get('cityId', PRESET_CITIES[0].id))
   const [savedCities, setSavedCities] = useState<StaticCity[]>(() => LS.get('savedCities', PRESET_CITIES))
   const [alertOpen, setAlertOpen] = useState(false)
@@ -86,8 +89,24 @@ export default function App() {
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Location: try geolocation on mount
+  // ?city= deep-link: geocode on mount, skip geolocation
   useEffect(() => {
+    if (!initialCity) return
+    setOnboarded(true) // skip onboarding for deep-links
+    fetchCitySuggestions(initialCity).then(results => {
+      if (!results.length) return
+      const r = results[0]
+      const id = makeId(r.latitude, r.longitude)
+      const region = [r.admin1, r.country].filter(Boolean).join(', ')
+      const lc: StaticCity = { id, name: r.name, region, cond: 'clear-day', temp: 20, hi: 24, lo: 15, latitude: r.latitude, longitude: r.longitude }
+      setSavedCities(prev => prev.find(c => c.id === id) ? prev : [lc, ...prev])
+      setCityId(id)
+    })
+  }, [initialCity]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Location: try geolocation on mount (skip if deep-link provided)
+  useEffect(() => {
+    if (initialCity) return
     if (typeof navigator !== 'undefined' && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async pos => {
@@ -125,6 +144,8 @@ export default function App() {
   // Persist unit
   useEffect(() => { LS.set('unit', unit) }, [unit])
   useEffect(() => { LS.set('windUnit', windUnit) }, [windUnit])
+  useEffect(() => { LS.set('alertOnRain', alertOnRain) }, [alertOnRain])
+  useEffect(() => { LS.set('alertOnSnow', alertOnSnow) }, [alertOnSnow])
   const toggleUnit = useCallback(() => setUnit(u => u === 'C' ? 'F' : 'C'), [])
 
   // Fetch live weather for current city
@@ -214,6 +235,21 @@ export default function App() {
       })
     }
   }, [city.alert, notifPermission])
+
+  // Condition-based alert: fire when weather changes to a watched condition
+  useEffect(() => {
+    const cond = city.cond
+    const prev = lastCondRef.current
+    lastCondRef.current = cond
+    if (!prev || prev === cond || notifPermission !== 'granted') return
+    const isRain = ['rain', 'thunderstorm'].includes(cond)
+    const isSnow = cond === 'snow'
+    if (alertOnRain && isRain) {
+      new Notification(`🌧️ ${city.name}`, { body: translations[locale].cond[cond] ?? cond, icon: '/pwa-192.png' })
+    } else if (alertOnSnow && isSnow) {
+      new Notification(`❄️ ${city.name}`, { body: translations[locale].cond[cond] ?? cond, icon: '/pwa-192.png' })
+    }
+  }, [city.cond, city.name, alertOnRain, alertOnSnow, notifPermission, locale])
 
   // Compute sky from current city condition
   const sky = useMemo(() => skyFor(city.cond, themeKey), [city.cond, themeKey])
@@ -470,6 +506,10 @@ export default function App() {
           onMotionToggle={() => setMotionOff(v => !v)}
           onShare={handleShare}
           onClose={() => setSettingsOpen(false)}
+          alertOnRain={alertOnRain}
+          alertOnSnow={alertOnSnow}
+          onToggleRainAlert={() => setAlertOnRain(v => !v)}
+          onToggleSnowAlert={() => setAlertOnSnow(v => !v)}
         />
       )}
 

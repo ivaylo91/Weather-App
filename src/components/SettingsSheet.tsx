@@ -22,6 +22,10 @@ interface SettingsSheetProps {
   onMotionToggle: () => void
   onShare: () => void
   onClose: () => void
+  alertOnRain: boolean
+  alertOnSnow: boolean
+  onToggleRainAlert: () => void
+  onToggleSnowAlert: () => void
 }
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
@@ -56,7 +60,9 @@ function Pill({ active, accent, fg, onClick, children }: {
 
 export default function SettingsSheet({
   tone, accent, unit, windUnit, themeKey, toneOverride, motionOff,
+  alertOnRain, alertOnSnow,
   onUnitToggle, onWindUnit, onTheme, onToneOverride, onMotionToggle, onShare, onClose,
+  onToggleRainAlert, onToggleSnowAlert,
 }: SettingsSheetProps) {
   const t = toneStyles(tone)
   const tr = useT()
@@ -93,10 +99,16 @@ export default function SettingsSheet({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
           {/* Language */}
           <Row label={tr.language}>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {(['en', 'bg'] as Locale[]).map(l => (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {([
+                ['en', '🇬🇧 English'],
+                ['bg', '🇧🇬 Български'],
+                ['de', '🇩🇪 Deutsch'],
+                ['fr', '🇫🇷 Français'],
+                ['es', '🇪🇸 Español'],
+              ] as [Locale, string][]).map(([l, label]) => (
                 <Pill key={l} active={locale === l} accent={accent} fg={fg} onClick={() => setLocale(l)}>
-                  {l === 'en' ? '🇬🇧 English' : '🇧🇬 Български'}
+                  {label}
                 </Pill>
               ))}
             </div>
@@ -184,6 +196,24 @@ export default function SettingsSheet({
               </div>
             </button>
           </Row>
+
+          {/* Condition alerts */}
+          {typeof Notification !== 'undefined' && (
+            <Row label={tr.condAlerts}>
+              {[
+                { label: tr.alertOnRain, on: alertOnRain, toggle: onToggleRainAlert },
+                { label: tr.alertOnSnow, on: alertOnSnow, toggle: onToggleSnowAlert },
+              ].map(({ label, on, toggle }) => (
+                <button key={label} onClick={toggle} className="press" role="switch" aria-checked={on}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: 16, border: 'none', background: rowBg, color: fg, cursor: 'pointer', textAlign: 'left' }}>
+                  <span style={{ fontSize: 14, fontWeight: 600 }}>{label}</span>
+                  <div style={{ width: 44, height: 26, borderRadius: 13, background: on ? accent : 'rgba(120,130,160,0.22)', position: 'relative', flexShrink: 0, transition: 'background .2s' }}>
+                    <div style={{ position: 'absolute', top: 3, left: on ? 21 : 3, width: 20, height: 20, borderRadius: 10, background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.2)', transition: 'left .2s' }} />
+                  </div>
+                </button>
+              ))}
+            </Row>
+          )}
 
           {/* Share */}
           <button
