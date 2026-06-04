@@ -19,7 +19,9 @@ export interface HourlyPoint {
 }
 
 export interface DailyDay {
-  day: string
+  day: string       // English fallback ("Today" / "Mon" etc.)
+  dayIndex: number  // 0 = Sun … 6 = Sat
+  isToday: boolean
   cond: WeatherCondition
   hi: number
   lo: number

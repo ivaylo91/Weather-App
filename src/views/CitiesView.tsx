@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { WeatherTone, StaticCity, CitySuggestion, Unit } from '../types'
+import { useT } from '../i18n/LocaleContext'
 import { toneStyles, skyFor, CONDITIONS } from '../utils/sky'
 import { conv } from '../utils/temperature'
 import { fetchCityData, fetchCitySuggestions } from '../api/weather'
@@ -18,6 +19,7 @@ interface CityCardProps {
 }
 
 function CityCard({ c, themeKey, unit, onSelect, onRemove, current }: CityCardProps) {
+  const tr = useT()
   // Fetch live weather — stale after 15 min, show static while loading
   const { data } = useQuery({
     queryKey: ['cityCard', c.latitude, c.longitude],
@@ -39,7 +41,7 @@ function CityCard({ c, themeKey, unit, onSelect, onRemove, current }: CityCardPr
       tabIndex={0}
       onClick={onSelect}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect() } }}
-      aria-label={`${c.name}, ${CONDITIONS[cond].label}, ${conv(temp, unit)} degrees. ${current ? 'Current city.' : ''}`}
+      aria-label={`${c.name}, ${tr.cond[cond] ?? cond}, ${conv(temp, unit)} degrees. ${current ? 'Current city.' : ''}`}
       aria-pressed={current}
       className="press city-card"
       style={{
@@ -61,7 +63,7 @@ function CityCard({ c, themeKey, unit, onSelect, onRemove, current }: CityCardPr
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
           <div style={{ fontSize: 13, fontWeight: 700, opacity: 0.85 }}>
-            {CONDITIONS[cond].label}
+            {tr.cond[cond] ?? cond}
             <span style={{ opacity: 0.7 }}> · H:{conv(hi, unit)}° L:{conv(lo, unit)}°</span>
           </div>
           <div style={{ fontSize: 40, fontWeight: 500, letterSpacing: -2, lineHeight: 1 }}>
@@ -97,6 +99,7 @@ interface CitiesViewProps {
 
 export default function CitiesView({ cities, currentId, themeKey, tone, accent, unit, onSelect, onRemove, onSearch }: CitiesViewProps) {
   const t = toneStyles(tone)
+  const tr = useT()
   const [q, setQ] = useState('')
   const [suggestions, setSuggestions] = useState<CitySuggestion[]>([])
   const [searching, setSearching] = useState(false)
@@ -128,14 +131,14 @@ export default function CitiesView({ cities, currentId, themeKey, tone, accent, 
   return (
     <main aria-label="Cities" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
-        <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: -0.6, margin: '2px 2px 14px', color: t.text }}>Cities</h1>
+        <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: -0.6, margin: '2px 2px 14px', color: t.text }}>{tr.citiesTitle}</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: t.cardBg, border: `1px solid ${t.cardBorder}`, borderRadius: 18, padding: '12px 15px', color: t.dim, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
           <Icon name="search" size={19} stroke={2.2} />
           <input
             value={q}
             onChange={e => handleQueryChange(e.target.value)}
-            placeholder="Search for a city or airport"
-            aria-label="Search for a city or airport"
+            placeholder={tr.searchPlaceholder}
+            aria-label={tr.searchPlaceholder}
             style={{ flex: 1, border: 'none', background: 'none', outline: 'none', color: t.text, fontSize: 15.5, fontWeight: 600, fontFamily: 'inherit' }}
           />
           {q && (
@@ -148,7 +151,7 @@ export default function CitiesView({ cities, currentId, themeKey, tone, accent, 
 
       {q.trim() && suggestions.length > 0 && (
         <div>
-          <SectionLabel tone={tone} icon="plus">Add a city</SectionLabel>
+          <SectionLabel tone={tone} icon="plus">{tr.addCity}</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {suggestions.map(s => (
               <button key={s.id} onClick={() => handleAddSuggestion(s)} className="press" style={{
@@ -168,7 +171,7 @@ export default function CitiesView({ cities, currentId, themeKey, tone, accent, 
       )}
 
       {searching && (
-        <div style={{ textAlign: 'center', color: t.dim, padding: '16px 0', fontWeight: 600 }}>Searching...</div>
+        <div style={{ textAlign: 'center', color: t.dim, padding: '16px 0', fontWeight: 600 }}>{tr.searching}</div>
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
@@ -187,7 +190,7 @@ export default function CitiesView({ cities, currentId, themeKey, tone, accent, 
 
       {q.trim() && suggestions.length === 0 && savedFiltered.length === 0 && !searching && (
         <div style={{ textAlign: 'center', color: t.dim, padding: '30px 0', fontWeight: 600 }}>
-          No cities found for "{q}".
+          {tr.noCitiesFound(q)}
         </div>
       )}
     </main>

@@ -1,4 +1,5 @@
 import type { WeatherTone, WeatherAlert, CityData } from '../types'
+import { useT } from '../i18n/LocaleContext'
 import Icon from './Icon'
 
 interface AlertSheetProps {
@@ -12,6 +13,7 @@ interface AlertSheetProps {
 }
 
 export default function AlertSheet({ alert, city, tone, notifPermission, onEnableNotif, onClose }: AlertSheetProps) {
+  const tr = useT()
   if (!alert) return null
   const sevColor = alert.sev === 'Extreme' ? 'oklch(0.62 0.2 25)' : alert.sev === 'Severe' ? 'oklch(0.66 0.18 45)' : 'oklch(0.72 0.15 75)'
   const bg = tone === 'light' ? '#1b2540' : '#fff'
@@ -46,11 +48,11 @@ export default function AlertSheet({ alert, city, tone, notifPermission, onEnabl
 
         <div style={{ display: 'flex', gap: 10, fontSize: 13.5, marginBottom: 12 }}>
           <div style={{ flex: 1, padding: '12px 14px', borderRadius: 16, background: subtle }}>
-            <div style={{ opacity: 0.6, fontWeight: 700, fontSize: 11.5, textTransform: 'uppercase', letterSpacing: 0.5 }}>In effect until</div>
+            <div style={{ opacity: 0.6, fontWeight: 700, fontSize: 11.5, textTransform: 'uppercase', letterSpacing: 0.5 }}>{tr.inEffectUntil}</div>
             <div style={{ fontSize: 17, fontWeight: 800, marginTop: 3 }}>{alert.until}</div>
           </div>
           <div style={{ flex: 1, padding: '12px 14px', borderRadius: 16, background: subtle }}>
-            <div style={{ opacity: 0.6, fontWeight: 700, fontSize: 11.5, textTransform: 'uppercase', letterSpacing: 0.5 }}>Source</div>
+            <div style={{ opacity: 0.6, fontWeight: 700, fontSize: 11.5, textTransform: 'uppercase', letterSpacing: 0.5 }}>{tr.alertSource}</div>
             <div style={{ fontSize: 17, fontWeight: 800, marginTop: 3 }}>NWS Alerts</div>
           </div>
         </div>
@@ -63,12 +65,12 @@ export default function AlertSheet({ alert, city, tone, notifPermission, onEnabl
             style={{ width: '100%', padding: '13px 16px', borderRadius: 16, border: `1px solid ${sevColor}`, background: 'transparent', color: sevColor, fontWeight: 700, fontSize: 14.5, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
           >
             <Icon name="bell" size={18} stroke={2.2} />
-            {notifPermission === 'denied' ? 'Notifications blocked in browser settings' : 'Enable alert notifications'}
+            {notifPermission === 'denied' ? tr.notificationsBlocked : tr.enableNotifications}
           </button>
         )}
         {notifPermission === 'granted' && (
           <div style={{ textAlign: 'center', fontSize: 13, opacity: 0.55, fontWeight: 600 }}>
-            🔔 Notifications enabled
+            {tr.notificationsEnabled}
           </div>
         )}
       </div>

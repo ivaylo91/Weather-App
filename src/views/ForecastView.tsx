@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import type { WeatherTone, CityData, Unit } from '../types'
 import { conv } from '../utils/temperature'
+import { useT } from '../i18n/LocaleContext'
 import { toneStyles, CONDITIONS } from '../utils/sky'
 import { mulberry } from '../utils/mulberry'
 import { WeatherScene } from '../components/WeatherScene'
@@ -53,6 +54,7 @@ interface ForecastViewProps {
 
 export default function ForecastView({ city, tone, accent, unit }: ForecastViewProps) {
   const t = toneStyles(tone)
+  const tr = useT()
   const [sel, setSel] = useState(0)
   const day = city.daily[sel]
 
@@ -83,7 +85,7 @@ export default function ForecastView({ city, tone, accent, unit }: ForecastViewP
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
                 backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
               }}>
-                <span style={{ fontSize: 12.5, fontWeight: 800 }}>{dd.day === 'Today' ? 'Today' : dd.day}</span>
+                <span style={{ fontSize: 12.5, fontWeight: 800 }}>{dd.isToday ? tr.today : tr.days[dd.dayIndex]}</span>
                 <WeatherGlyph kind={dd.cond} size={26} />
                 <span style={{ fontSize: 12.5, fontWeight: 700 }}>{conv(dd.hi, unit)}°</span>
               </button>
@@ -98,9 +100,9 @@ export default function ForecastView({ city, tone, accent, unit }: ForecastViewP
           <WeatherScene kind={day.cond} size={120} />
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: t.dim, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              {day.day === 'Today' ? 'Today' : day.day}
+              {day.isToday ? tr.today : tr.days[day.dayIndex]}
             </div>
-            <div style={{ fontSize: 22, fontWeight: 800, margin: '2px 0 6px' }}>{CONDITIONS[day.cond].label}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, margin: '2px 0 6px' }}>{tr.cond[day.cond] ?? day.cond}</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
               <span style={{ fontSize: 44, fontWeight: 600, letterSpacing: -2 }}>{conv(day.hi, unit)}°</span>
               <span style={{ fontSize: 22, fontWeight: 500, color: t.dim }}>{conv(day.lo, unit)}°</span>
@@ -127,19 +129,19 @@ export default function ForecastView({ city, tone, accent, unit }: ForecastViewP
 
       {/* hourly curve */}
       <Card tone={tone}>
-        <SectionLabel tone={tone} icon="today">Hourly temperature</SectionLabel>
+        <SectionLabel tone={tone} icon="today">{tr.hourlyTemp}</SectionLabel>
         <HourlyStrip hours={city.hourly} tone={tone} accent={accent} unit={unit} />
       </Card>
 
       {/* precip */}
       <Card tone={tone}>
-        <SectionLabel tone={tone} icon="umbrella">Chance of precipitation</SectionLabel>
+        <SectionLabel tone={tone} icon="umbrella">{tr.chanceOfPrecip}</SectionLabel>
         <PrecipChart hours={city.hourly} tone={tone} accent={accent} />
       </Card>
 
       {/* full 7-day */}
       <Card tone={tone}>
-        <SectionLabel tone={tone} icon="forecast">Next 7 days</SectionLabel>
+        <SectionLabel tone={tone} icon="forecast">{tr.nextSevenDays}</SectionLabel>
         <DailyList days={city.daily} tone={tone} accent={accent} unit={unit} />
       </Card>
     </div>

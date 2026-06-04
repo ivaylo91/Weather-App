@@ -1,5 +1,6 @@
 import type { WeatherTone } from '../types'
 import { toneStyles } from '../utils/sky'
+import { useT } from '../i18n/LocaleContext'
 import Icon from './Icon'
 
 const NAV_ITEMS = [
@@ -18,6 +19,13 @@ interface PillNavProps {
 
 export default function PillNav({ view, setView, tone, accent }: PillNavProps) {
   const t = toneStyles(tone)
+  const tr = useT()
+  const navItems = [
+    { id: 'today',    label: tr.nav.today,    icon: 'today' },
+    { id: 'forecast', label: tr.nav.forecast, icon: 'forecast' },
+    { id: 'radar',    label: tr.nav.radar,    icon: 'radar' },
+    { id: 'cities',   label: tr.nav.cities,   icon: 'cities' },
+  ]
   return (
     <nav
       aria-label="Main navigation"
@@ -38,7 +46,7 @@ export default function PillNav({ view, setView, tone, accent }: PillNavProps) {
           WebkitBackdropFilter: 'blur(22px) saturate(1.4)',
         }}
       >
-        {NAV_ITEMS.map(it => {
+        {navItems.map(it => {
           const active = view === it.id
           return (
             <button

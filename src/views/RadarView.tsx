@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { WeatherTone, CityData } from '../types'
 import { toneStyles } from '../utils/sky'
 import { fetchRadarData, type RadarFrame } from '../api/weather'
+import { useT } from '../i18n/LocaleContext'
 import { Card } from '../components/Card'
 import Icon from '../components/Icon'
 
@@ -31,6 +32,7 @@ interface RadarViewProps {
 
 export default function RadarView({ city, tone, accent }: RadarViewProps) {
   const t = toneStyles(tone)
+  const tr = useT()
   const containerRef = useRef<HTMLDivElement>(null)
   const [dims, setDims] = useState({ w: 360, h: 340 })
   const [frameIdx, setFrameIdx] = useState(0)
@@ -148,16 +150,16 @@ export default function RadarView({ city, tone, accent }: RadarViewProps) {
               <span style={{ width: 7, height: 7, borderRadius: 4, background: accent, display: 'inline-block' }} className="pulse-dot" />
               {radarData
                 ? `Radar · ${currentFrame ? fmtFrameLabel(currentFrame.time, nowTs) : '—'}`
-                : 'Loading radar…'}
+                : tr.loadingRadar}
             </div>
           </div>
 
           {/* Intensity legend */}
           <div style={{ position: 'absolute', top: 14, right: 16, background: 'rgba(8,14,28,0.72)', borderRadius: 12, padding: '8px 10px', backdropFilter: 'blur(8px)', zIndex: 10 }}>
-            <div style={{ fontSize: 9.5, color: '#fff', fontWeight: 700, marginBottom: 5, opacity: 0.75 }}>INTENSITY</div>
+            <div style={{ fontSize: 9.5, color: '#fff', fontWeight: 700, marginBottom: 5, opacity: 0.75 }}>{tr.intensity}</div>
             <div style={{ width: 90, height: 7, borderRadius: 4, background: 'linear-gradient(90deg, oklch(0.7 0.16 220), oklch(0.72 0.18 150), oklch(0.8 0.18 95), oklch(0.66 0.22 25))' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 8.5, color: 'rgba(255,255,255,0.65)', marginTop: 3, fontWeight: 600 }}>
-              <span>Light</span><span>Heavy</span>
+              <span>{tr.lightIntensity}</span><span>{tr.heavyIntensity}</span>
             </div>
           </div>
         </div>
@@ -199,8 +201,8 @@ export default function RadarView({ city, tone, accent }: RadarViewProps) {
       <Card tone={tone} pad={16}>
         <div style={{ fontSize: 14, fontWeight: 600, color: t.dim, lineHeight: 1.5 }}>
           {hasPrecip
-            ? `Active precipitation detected near ${city.name}. Radar updates every 10 minutes.`
-            : `No significant precipitation near ${city.name} at this time.`}
+            ? tr.activePrecip(city.name)
+            : tr.noPrecip(city.name)}
         </div>
       </Card>
     </div>

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { WeatherTone, CityData } from '../types'
 import { toneStyles } from '../utils/sky'
+import { useT } from '../i18n/LocaleContext'
 import { Card } from './Card'
 import Icon from './Icon'
 
@@ -49,6 +50,7 @@ function parseHour(timeStr: string): number {
 }
 
 export function SunArc({ city, tone, accent }: SunArcProps) {
+  const tr = useT()
   const t = toneStyles(tone)
   const cur = parseHour(city.time)
   const isNight = cur < city.sunrise || cur > city.sunset
@@ -67,7 +69,7 @@ export function SunArc({ city, tone, accent }: SunArcProps) {
   return (
     <Card tone={tone} pad={16} style={{ borderRadius: 22, gridColumn: 'span 2' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: t.dim, fontSize: 11.5, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>
-        <Icon name="sunUp" size={15} stroke={2.2} />Sun
+        <Icon name="sunUp" size={15} stroke={2.2} />{tr.sun}
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block', overflow: 'visible' }}>
         <line x1={pad} y1={baseline} x2={W - pad} y2={baseline} stroke={t.track} strokeWidth="1.5" strokeDasharray="2 5" />
@@ -82,11 +84,11 @@ export function SunArc({ city, tone, accent }: SunArcProps) {
       </svg>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 13 }}>
         <div>
-          <div style={{ color: t.dim, fontSize: 11, fontWeight: 700 }}>SUNRISE</div>
+          <div style={{ color: t.dim, fontSize: 11, fontWeight: 700 }}>{tr.sun.toUpperCase()}↑</div>
           <div style={{ fontWeight: 700 }}>{city.det.sunriseT}</div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ color: t.dim, fontSize: 11, fontWeight: 700 }}>SUNSET</div>
+          <div style={{ color: t.dim, fontSize: 11, fontWeight: 700 }}>{tr.sun.toUpperCase()}↓</div>
           <div style={{ fontWeight: 700 }}>{city.det.sunsetT}</div>
         </div>
       </div>
@@ -102,10 +104,11 @@ interface UVCardProps {
 }
 
 export function UVCard({ city, tone, accent }: UVCardProps) {
+  const tr = useT()
   const uv = city.det.uv
   const frac = Math.min(1, uv / 11)
   return (
-    <DetailCard tone={tone} accent={accent} icon="today" label="UV Index" value={uv} sub={city.det.uvLabel}>
+    <DetailCard tone={tone} accent={accent} icon="today" label={tr.uvIndex} value={uv} sub={tr.uv(uv)}>
       <div style={{ height: 6, borderRadius: 3, background: 'linear-gradient(90deg, oklch(0.8 0.15 150), oklch(0.85 0.16 95), oklch(0.78 0.18 55), oklch(0.65 0.22 25))', position: 'relative', marginTop: 2 }}>
         <div style={{ position: 'absolute', top: -3, left: `calc(${frac * 100}% - 6px)`, width: 12, height: 12, borderRadius: 6, background: '#fff', border: '2px solid ' + accent, boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
       </div>
@@ -121,11 +124,12 @@ interface WindCardProps {
 }
 
 export function WindCard({ city, tone, accent }: WindCardProps) {
+  const tr = useT()
   const t = toneStyles(tone)
   const dirs: Record<string, number> = { N: 0, NE: 45, E: 90, SE: 135, S: 180, SW: 225, W: 270, NW: 315, WNW: 292, ENE: 67, ESE: 112, WSW: 247, NNE: 22, SSE: 157, SSW: 202, NNW: 337 }
   const deg = dirs[city.det.windDir] ?? 0
   return (
-    <DetailCard tone={tone} accent={accent} icon="wind" label="Wind" value={city.det.wind} unit="km/h" sub={`Gusts ${city.det.gust} km/h`}>
+    <DetailCard tone={tone} accent={accent} icon="wind" label={tr.wind} value={city.det.wind} unit="km/h" sub={tr.gusts(city.det.gust)}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: -2 }}>
         <div style={{ position: 'relative', width: 42, height: 42, borderRadius: 21, border: `1.5px solid ${t.track}`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
           <span style={{ position: 'absolute', top: 2, fontSize: 8, fontWeight: 800, color: t.dim }}>N</span>

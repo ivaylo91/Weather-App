@@ -182,6 +182,8 @@ export async function fetchCityData(
     const dayCond = wmoToCondition(dailyCodes[i] ?? 0, true)
     return {
       day: dayLabel,
+      dayIndex: dayOfWeek,
+      isToday: i === 0,
       cond: dayCond,
       hi: Math.round(dailyMax[i] ?? temp + 2),
       lo: Math.round(dailyMin[i] ?? temp - 4),

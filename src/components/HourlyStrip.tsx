@@ -1,6 +1,7 @@
 import type { WeatherTone, HourlyPoint, Unit } from '../types'
 import { toneStyles } from '../utils/sky'
 import { conv } from '../utils/temperature'
+import { useT } from '../i18n/LocaleContext'
 import Icon from './Icon'
 import { WeatherGlyph } from './WeatherScene'
 
@@ -31,6 +32,7 @@ interface HourlyStripProps {
 
 export default function HourlyStrip({ hours, tone, accent, unit = 'C' }: HourlyStripProps) {
   const t = toneStyles(tone)
+  const tr = useT()
   const cellW = 62
   const H = 150
   const n = hours.length
@@ -78,7 +80,7 @@ export default function HourlyStrip({ hours, tone, accent, unit = 'C' }: HourlyS
               paddingBottom: 10,
             }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: h.now ? accent : t.dim }}>
-                {h.now ? 'Now' : fmtHour(h.hour)}
+                {h.now ? tr.now : fmtHour(h.hour)}
               </div>
               <div style={{ height: 30 }} />
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>

@@ -1,8 +1,9 @@
 import type { CSSProperties } from 'react'
 import type { WeatherTone, CityData, Unit } from '../types'
-import { toneStyles, CONDITIONS } from '../utils/sky'
+import { toneStyles } from '../utils/sky'
 import type { SkyResult } from '../utils/sky'
 import { conv } from '../utils/temperature'
+import { useT } from '../i18n/LocaleContext'
 import { WeatherScene } from '../components/WeatherScene'
 import { Card, SectionLabel } from '../components/Card'
 import HourlyStrip from '../components/HourlyStrip'
@@ -40,6 +41,7 @@ function LoadingSkeleton({ tone }: { tone: WeatherTone }) {
 
 export default function TodayView({ city, tone, accent, sky, unit, isLoading, onAlert }: TodayViewProps) {
   const t = toneStyles(tone)
+  const tr = useT()
   const d = city.det
 
   if (isLoading && city.hourly.length === 0) {
@@ -62,19 +64,19 @@ export default function TodayView({ city, tone, accent, sky, unit, isLoading, on
           <span style={{ fontSize: 'clamp(34px, 8vw, 48px)', fontWeight: 300, marginTop: '0.18em' }}>°</span>
         </div>
         <div className="hero-rise" style={{ fontSize: 19, fontWeight: 700, marginTop: 4, animationDelay: '.1s' }}>
-          {CONDITIONS[city.cond].label}
+          {tr.cond[city.cond] ?? city.cond}
         </div>
         <div className="hero-rise" style={{ display: 'flex', gap: 14, marginTop: 6, fontSize: 15, fontWeight: 600, color: t.dim, animationDelay: '.14s' }}>
           <span>H:{conv(city.hi, unit)}°</span>
           <span>L:{conv(city.lo, unit)}°</span>
-          <span>Feels {conv(d.feels, unit)}°</span>
+          <span>{tr.feelsLike} {conv(d.feels, unit)}°</span>
         </div>
       </div>
 
       {/* Hourly */}
       {city.hourly.length > 0 && (
         <Card tone={tone}>
-          <SectionLabel tone={tone} icon="today">Hourly forecast</SectionLabel>
+          <SectionLabel tone={tone} icon="today">{tr.hourlyForecast}</SectionLabel>
           <HourlyStrip hours={city.hourly} tone={tone} accent={accent} unit={unit} />
         </Card>
       )}
@@ -82,7 +84,7 @@ export default function TodayView({ city, tone, accent, sky, unit, isLoading, on
       {/* 7-day */}
       {city.daily.length > 0 && (
         <Card tone={tone}>
-          <SectionLabel tone={tone} icon="forecast">7-day forecast</SectionLabel>
+          <SectionLabel tone={tone} icon="forecast">{tr.sevenDay}</SectionLabel>
           <DailyList days={city.daily} tone={tone} accent={accent} unit={unit} />
         </Card>
       )}
@@ -94,14 +96,14 @@ export default function TodayView({ city, tone, accent, sky, unit, isLoading, on
           <UVCard city={city} tone={tone} accent={accent} />
           <WindCard city={city} tone={tone} accent={accent} />
           <DetailCard
-            tone={tone} accent={accent} icon="thermo" label="Feels like"
+            tone={tone} accent={accent} icon="thermo" label={tr.feelsLike}
             value={`${conv(d.feels, unit)}°`}
-            sub={d.feels > city.temp ? 'Warmer than actual' : d.feels < city.temp ? 'Cooler than actual' : 'Same as actual'}
+            sub={tr.feelsLikeSub(d.feels, city.temp)}
           />
-          <DetailCard tone={tone} accent={accent} icon="drop" label="Humidity" value={d.humidity} unit="%" sub={`Dew point ${conv(d.dew, unit)}°`} />
-          <DetailCard tone={tone} accent={accent} icon="eye" label="Visibility" value={d.visibility} unit="km" sub={d.visibility >= 10 ? 'Clear' : 'Reduced'} />
-          <DetailCard tone={tone} accent={accent} icon="gauge" label="Pressure" value={d.pressure} unit="hPa" sub={d.pressure >= 1013 ? 'High · stable' : 'Low · unsettled'} />
-          <DetailCard tone={tone} accent={accent} icon="leaf" label="Air quality" value={d.aqi} sub={d.aqiLabel} />
+          <DetailCard tone={tone} accent={accent} icon="drop" label={tr.humidity} value={d.humidity} unit="%" sub={tr.dewPoint(conv(d.dew, unit))} />
+          <DetailCard tone={tone} accent={accent} icon="eye" label={tr.visibility} value={d.visibility} unit="km" sub={tr.visibilitySub(d.visibility)} />
+          <DetailCard tone={tone} accent={accent} icon="gauge" label={tr.pressure} value={d.pressure} unit="hPa" sub={tr.pressureSub(d.pressure)} />
+          <DetailCard tone={tone} accent={accent} icon="leaf" label={tr.airQuality} value={d.aqi} sub={tr.aqi(d.aqi)} />
         </div>
       )}
     </div>

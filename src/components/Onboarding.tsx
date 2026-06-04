@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { skyFor, toneStyles } from '../utils/sky'
 import { reverseGeocode } from '../api/weather'
+import { useT } from '../i18n/LocaleContext'
 import { WeatherScene } from './WeatherScene'
 import Icon from './Icon'
 
@@ -30,6 +31,7 @@ interface OnboardingProps {
 export default function Onboarding({ themeKey, onDone }: OnboardingProps) {
   const [step, setStep] = useState(0)
   const [locating, setLocating] = useState(false)
+  const tr = useT()
 
   function handleUseLocation() {
     if (!navigator.geolocation) { onDone(); return }
@@ -46,8 +48,8 @@ export default function Onboarding({ themeKey, onDone }: OnboardingProps) {
   const sky = skyFor('partly-cloudy-day', themeKey)
   const t = toneStyles(sky.tone)
   const accent = sky.accent
-  const isPerm = step === SLIDES.length
-  const s = SLIDES[step]
+  const isPerm = step === tr.slides.length
+  const s = tr.slides[step] ?? tr.slides[0]
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: sky.gradient, color: t.text, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -95,7 +97,7 @@ export default function Onboarding({ themeKey, onDone }: OnboardingProps) {
           </div>
           {!isPerm && (
             <button onClick={() => onDone()} className="press" style={{ border: 'none', background: 'none', color: t.dim, fontWeight: 700, fontSize: 14.5, cursor: 'pointer' }}>
-              Skip
+              {tr.skip}
             </button>
           )}
         </div>
@@ -124,7 +126,7 @@ export default function Onboarding({ themeKey, onDone }: OnboardingProps) {
                 className="press"
                 style={{ display: 'flex', alignItems: 'center', gap: 8, border: 'none', background: accent, color: '#fff', fontWeight: 800, fontSize: 16, padding: '15px 26px', borderRadius: 30, cursor: 'pointer', boxShadow: `0 10px 26px ${accent}55` }}
               >
-                {step === SLIDES.length - 1 ? 'Get started' : 'Next'}
+                {step === tr.slides.length - 1 ? tr.getStarted : tr.next}
                 <Icon name="chevron" size={19} stroke={2.6} />
               </button>
             </div>
@@ -137,10 +139,10 @@ export default function Onboarding({ themeKey, onDone }: OnboardingProps) {
               </div>
             </div>
             <h1 className="hero-rise" style={{ fontSize: 30, fontWeight: 800, letterSpacing: -0.8, textAlign: 'center', margin: 0, animationDelay: '.05s' }}>
-              Enable your location
+              {tr.enableLocationTitle}
             </h1>
             <p className="hero-rise" style={{ fontSize: 16, lineHeight: 1.55, color: t.dim, fontWeight: 500, textAlign: 'center', maxWidth: 340, margin: '12px auto 0', animationDelay: '.1s' }}>
-              Get accurate, hyper-local forecasts for exactly where you are — updated continuously.
+              {tr.enableLocationBody}
             </p>
             <div className="hero-rise" style={{ display: 'flex', flexDirection: 'column', gap: 11, marginTop: 30, animationDelay: '.15s' }}>
               <button
@@ -149,14 +151,14 @@ export default function Onboarding({ themeKey, onDone }: OnboardingProps) {
                 className="press"
                 style={{ border: 'none', background: accent, color: '#fff', fontWeight: 800, fontSize: 16.5, padding: '16px', borderRadius: 22, cursor: locating ? 'default' : 'pointer', opacity: locating ? 0.8 : 1, boxShadow: `0 10px 26px ${accent}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}
               >
-                <Icon name="pin" size={20} stroke={2.4} />{locating ? 'Locating…' : 'Use my location'}
+                <Icon name="pin" size={20} stroke={2.4} />{locating ? tr.locating : tr.useMyLocation}
               </button>
               <button
                 onClick={() => onDone('cities')}
                 className="press"
                 style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.text, fontWeight: 700, fontSize: 16, padding: '15px', borderRadius: 22, cursor: 'pointer', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
               >
-                Choose a city manually
+                {tr.chooseManually}
               </button>
             </div>
           </div>

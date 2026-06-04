@@ -1,6 +1,7 @@
 import type { WeatherTone, DailyDay, Unit } from '../types'
 import { toneStyles } from '../utils/sky'
 import { conv } from '../utils/temperature'
+import { useT } from '../i18n/LocaleContext'
 import { WeatherGlyph } from './WeatherScene'
 
 interface DailyListProps {
@@ -12,6 +13,7 @@ interface DailyListProps {
 
 export default function DailyList({ days, tone, accent, unit = 'C' }: DailyListProps) {
   const t = toneStyles(tone)
+  const tr = useT()
   const his = days.map(d => d.hi)
   const los = days.map(d => d.lo)
   const gMax = Math.max(...his)
@@ -32,7 +34,7 @@ export default function DailyList({ days, tone, accent, unit = 'C' }: DailyListP
             padding: '11px 4px',
             borderTop: i === 0 ? 'none' : `1px solid ${t.track}`,
           }}>
-            <div style={{ fontSize: 15, fontWeight: 700 }}>{d.day}</div>
+            <div style={{ fontSize: 15, fontWeight: 700 }}>{d.isToday ? tr.today : tr.days[d.dayIndex]}</div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <WeatherGlyph kind={d.cond} size={26} />
             </div>

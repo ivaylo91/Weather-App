@@ -5,6 +5,8 @@ import { fetchCityData, fetchAlerts, reverseGeocode } from './api/weather'
 import type { StaticCity, CityData, Unit, WeatherTone, WeatherCondition } from './types'
 import { CONDITIONS } from './utils/sky'
 import { conv } from './utils/temperature'
+import { LocaleContext } from './i18n/LocaleContext'
+import { translations, type Locale } from './i18n/translations'
 import Onboarding from './components/Onboarding'
 import TopBar from './components/TopBar'
 import PillNav from './components/PillNav'
@@ -68,6 +70,7 @@ export default function App() {
   const [savedCities, setSavedCities] = useState<StaticCity[]>(() => LS.get('savedCities', PRESET_CITIES))
   const [alertOpen, setAlertOpen] = useState(false)
   const [motionOff, setMotionOff] = useState(false)
+  const [locale, setLocale] = useState<Locale>(() => LS.get('locale', 'en'))
   type ToneOverride = 'auto' | 'dark' | 'light'
   const [toneOverride, setToneOverride] = useState<ToneOverride>(() => LS.get('toneOverride', 'auto'))
   const [toast, setToast] = useState<string | null>(null)
@@ -219,6 +222,7 @@ export default function App() {
   useEffect(() => { LS.set('view', view) }, [view])
   useEffect(() => { LS.set('themeKey', themeKey) }, [themeKey])
   useEffect(() => { LS.set('toneOverride', toneOverride) }, [toneOverride])
+  useEffect(() => { LS.set('locale', locale) }, [locale])
   useEffect(() => { LS.set('cityId', cityId) }, [cityId])
   useEffect(() => { LS.set('savedCities', savedCities) }, [savedCities])
 
@@ -278,7 +282,7 @@ export default function App() {
         await navigator.share({ title: `Weather in ${city.name}`, text, url: window.location.href })
       } else {
         await navigator.clipboard.writeText(text)
-        showToast('Copied to clipboard!')
+        showToast(translations[locale].copiedToClipboard)
       }
     } catch {
       // user cancelled
@@ -318,7 +322,10 @@ export default function App() {
     }
   }
 
+  const localeValue = { locale, setLocale, t: translations[locale] }
+
   return (
+    <LocaleContext.Provider value={localeValue}>
     <>
       {/* Sky background layers */}
       {bgLayers.map((g, i) => (
@@ -380,7 +387,7 @@ export default function App() {
                 fontSize: 11.5, fontWeight: 700,
               }}
             >
-              {toneOverride === 'dark' ? '🌙 Dark' : toneOverride === 'light' ? '☀️ Light' : '🌓 Auto'}
+              {toneOverride === 'dark' ? translations[locale].darkMode : toneOverride === 'light' ? translations[locale].lightMode : translations[locale].autoMode}
             </button>
             <button onClick={() => setMotionOff(v => !v)} className="press" style={{
               flexShrink: 0, padding: '5px 10px', borderRadius: 12,
@@ -390,8 +397,27 @@ export default function App() {
               backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
               fontSize: 11.5, fontWeight: 700,
             }}>
-              {motionOff ? 'Anim off' : 'Anim on'}
+              {motionOff ? translations[locale].animOff : translations[locale].animOn}
             </button>
+
+            {/* Language toggle */}
+            <div style={{
+              flexShrink: 0, display: 'flex', borderRadius: 12,
+              background: t.cardBg, border: `1px solid ${t.cardBorder}`,
+              backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+              padding: 3, gap: 2,
+            }}>
+              {(['en', 'bg'] as Locale[]).map(l => (
+                <button key={l} onClick={() => setLocale(l)} className="press" style={{
+                  padding: '3px 9px', borderRadius: 9, border: 'none', cursor: 'pointer',
+                  background: locale === l ? accent : 'transparent',
+                  color: locale === l ? '#fff' : t.dim,
+                  fontSize: 11.5, fontWeight: 800, transition: 'all .2s',
+                }}>
+                  {l.toUpperCase()}
+                </button>
+              ))}
+            </div>
           </div>
 
           <ErrorBoundary resetKey={view}>
@@ -432,5 +458,6 @@ export default function App() {
         </div>
       )}
     </>
+    </LocaleContext.Provider>
   )
 }
