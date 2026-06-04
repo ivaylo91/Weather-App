@@ -157,7 +157,7 @@ export default function App({ initialCity }: { initialCity?: string }) {
   // Fetch live weather for current city.
   // placeholderData shows the static city values instantly while the real
   // fetch completes, eliminating the blank flash on city switch.
-  const { data: cityData, isLoading: cityLoading } = useQuery<CityData>({
+  const { data: cityData, isLoading: cityLoading, isError: cityError, refetch: refetchCity } = useQuery<CityData>({
     queryKey: ['cityData', currentStaticCity.latitude, currentStaticCity.longitude],
     queryFn: () => fetchCityData(
       currentStaticCity.latitude,
@@ -412,7 +412,7 @@ export default function App({ initialCity }: { initialCity?: string }) {
   const renderView = () => {
     switch (view) {
       case 'today':
-        return <TodayView city={city} tone={tone} accent={accent} sky={sky} unit={unit} windUnit={windUnit} isLoading={cityLoading} onAlert={() => setAlertOpen(true)} savedCities={savedCities} cityId={cityId} onSwipe={handleCitySwipe} />
+        return <TodayView city={city} tone={tone} accent={accent} sky={sky} unit={unit} windUnit={windUnit} isLoading={cityLoading} isError={cityError} onRefresh={() => { refetchCity() }} onAlert={() => setAlertOpen(true)} savedCities={savedCities} cityId={cityId} onSwipe={handleCitySwipe} />
       case 'forecast':
         return <ForecastView city={city} tone={tone} accent={accent} unit={unit} />
       case 'radar':
@@ -432,7 +432,7 @@ export default function App({ initialCity }: { initialCity?: string }) {
           />
         )
       default:
-        return <TodayView city={city} tone={tone} accent={accent} sky={sky} unit={unit} windUnit={windUnit} isLoading={cityLoading} onAlert={() => setAlertOpen(true)} savedCities={savedCities} cityId={cityId} onSwipe={handleCitySwipe} />
+        return <TodayView city={city} tone={tone} accent={accent} sky={sky} unit={unit} windUnit={windUnit} isLoading={cityLoading} isError={cityError} onRefresh={() => { refetchCity() }} onAlert={() => setAlertOpen(true)} savedCities={savedCities} cityId={cityId} onSwipe={handleCitySwipe} />
     }
   }
 

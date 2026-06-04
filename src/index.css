@@ -131,3 +131,6 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18p
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
+
+/* skeleton pulse (shared by TodayView, ForecastView, WeatherSkeleton) */
+@keyframes skPulse { 0%,100%{opacity:.4} 50%{opacity:.85} }

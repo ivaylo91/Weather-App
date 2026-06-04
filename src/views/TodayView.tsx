@@ -20,6 +20,8 @@ interface TodayViewProps {
   sky: SkyResult
   unit: Unit
   isLoading?: boolean
+  isError?: boolean
+  onRefresh?: () => void
   onAlert: () => void
   savedCities?: StaticCity[]
   cityId?: string
@@ -45,7 +47,7 @@ function LoadingSkeleton({ tone }: { tone: WeatherTone }) {
   )
 }
 
-export default function TodayView({ city, tone, accent, sky, unit, isLoading, onAlert, savedCities = [], cityId, onSwipe, windUnit = 'kmh' }: TodayViewProps) {
+export default function TodayView({ city, tone, accent, sky, unit, isLoading, isError, onRefresh, onAlert, savedCities = [], cityId, onSwipe, windUnit = 'kmh' }: TodayViewProps) {
   const t = toneStyles(tone)
   const tr = useT()
   const d = city.det
@@ -115,21 +117,36 @@ export default function TodayView({ city, tone, accent, sky, unit, isLoading, on
         )}
       </div>
 
-      {/* Hourly */}
-      {city.hourly.length > 0 && (
-        <Card tone={tone}>
-          <SectionLabel tone={tone} icon="today">{tr.hourlyForecast}</SectionLabel>
+      {/* Hourly — skeleton while loading, error state with retry, real chart when data arrives */}
+      <Card tone={tone} style={city.hourly.length === 0 ? { minHeight: 170 } : {}}>
+        <SectionLabel tone={tone} icon="today">{tr.hourlyForecast}</SectionLabel>
+        {city.hourly.length > 0 ? (
           <HourlyStrip hours={city.hourly} tone={tone} accent={accent} unit={unit} />
-        </Card>
-      )}
+        ) : isError ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '24px 0', color: t.dim }}>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>Could not load forecast</span>
+            <button onClick={onRefresh} className="press" style={{ padding: '8px 20px', borderRadius: 14, border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.text, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
+              Retry
+            </button>
+          </div>
+        ) : (
+          <div style={{ height: 120, borderRadius: 14, background: t.track, animation: 'skPulse 1.8s ease-in-out infinite', marginTop: 4 }} />
+        )}
+      </Card>
 
-      {/* 7-day */}
-      {city.daily.length > 0 && (
-        <Card tone={tone}>
-          <SectionLabel tone={tone} icon="forecast">{tr.forecastDays(city.daily.length)}</SectionLabel>
+      {/* 7-day — same pattern */}
+      <Card tone={tone} style={city.daily.length === 0 ? { minHeight: 200 } : {}}>
+        <SectionLabel tone={tone} icon="forecast">{tr.sevenDay}</SectionLabel>
+        {city.daily.length > 0 ? (
           <DailyList days={city.daily} tone={tone} accent={accent} unit={unit} />
-        </Card>
-      )}
+        ) : !isError ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[0,1,2,3].map(i => (
+              <div key={i} style={{ height: 40, borderRadius: 10, background: t.track, animation: `skPulse 1.8s ease-in-out ${i*0.15}s infinite` }} />
+            ))}
+          </div>
+        ) : null}
+      </Card>
 
       {/* Details grid */}
       {city.daily.length > 0 && (
