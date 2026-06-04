@@ -352,3 +352,21 @@ export async function fetchHistoricalWeather(lat: number, lon: number): Promise<
     min: Math.round(data.daily.temperature_2m_min[i] ?? 0),
   }))
 }
+
+// ---- Minute-by-minute precipitation (next 2 hours, 15-min intervals) ----
+export interface MinutelyPoint {
+  minuteOffset: number   // 0, 15, 30, …, 105
+  precip: number         // mm — precipitation amount in 15-min interval
+}
+
+export async function fetchMinutelyPrecip(lat: number, lon: number): Promise<MinutelyPoint[]> {
+  const url = `${WEATHER_URL}?latitude=${lat}&longitude=${lon}` +
+    `&minutely_15=precipitation&forecast_minutely_15=8&timezone=auto${_k}`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error('Failed to fetch minutely precip')
+  const data = await res.json()
+  return (data.minutely_15?.precipitation ?? []).map((p: number, i: number) => ({
+    minuteOffset: i * 15,
+    precip: Math.round(p * 10) / 10,
+  }))
+}

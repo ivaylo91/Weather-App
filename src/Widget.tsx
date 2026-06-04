@@ -6,20 +6,21 @@ import WidgetView from './views/WidgetView'
 
 const DEFAULT = { lat: 51.5074, lon: -0.1278, name: 'London', region: 'United Kingdom' }
 
-function WidgetSkeleton() {
+function WidgetSkeleton({ size }: { size: 'sm' | 'md' | 'lg' }) {
+  const h = size === 'sm' ? 80 : size === 'lg' ? 300 : 180
   return (
     <div style={{
-      width: '100%', minHeight: '100vh',
+      width: '100%', height: h || '100vh',
       background: 'linear-gradient(135deg, #1d4ed8, #38bdf8)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
-      <div style={{ width: 60, height: 60, borderRadius: 30, background: 'rgba(255,255,255,0.25)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+      <div style={{ width: 40, height: 40, borderRadius: 20, background: 'rgba(255,255,255,0.25)', animation: 'pulse 1.5s ease-in-out infinite' }} />
       <style>{`@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}`}</style>
     </div>
   )
 }
 
-export default function Widget() {
+export default function Widget({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
   const [loc, setLoc] = useState<{ lat: number; lon: number; name: string; region: string } | null>(null)
 
   useEffect(() => {
@@ -41,6 +42,6 @@ export default function Widget() {
     staleTime: 1000 * 60 * 10,
   })
 
-  if (!data) return <WidgetSkeleton />
-  return <WidgetView data={data} />
+  if (!data) return <WidgetSkeleton size={size} />
+  return <WidgetView data={data} size={size} />
 }

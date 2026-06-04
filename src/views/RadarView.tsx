@@ -170,9 +170,21 @@ export default function RadarView({ city, tone, accent }: RadarViewProps) {
             </div>
           ))}
 
-          {/* Zoom level badge */}
-          <div style={{ position: 'absolute', bottom: 54, right: 16, zIndex: 10, background: 'rgba(8,14,28,0.65)', borderRadius: 8, padding: '3px 8px', color: 'rgba(255,255,255,0.65)', fontSize: 11, fontWeight: 700, backdropFilter: 'blur(6px)' }}>
-            {zoom}×
+          {/* Zoom buttons — visible on desktop/tablet where pinch isn't available */}
+          <div style={{ position: 'absolute', bottom: 54, right: 12, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <button
+              onClick={() => setZoom(z => Math.min(MAX_ZOOM, z + 1))}
+              disabled={zoom >= MAX_ZOOM}
+              aria-label="Zoom in"
+              style={{ width: 32, height: 32, borderRadius: 10, border: 'none', background: 'rgba(8,14,28,0.72)', color: '#fff', cursor: zoom >= MAX_ZOOM ? 'default' : 'pointer', fontSize: 18, fontWeight: 700, backdropFilter: 'blur(8px)', opacity: zoom >= MAX_ZOOM ? 0.4 : 1, display: 'grid', placeItems: 'center' }}
+            >+</button>
+            <div style={{ textAlign: 'center', fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.6)', lineHeight: 1.4 }}>{zoom}×</div>
+            <button
+              onClick={() => setZoom(z => Math.max(MIN_ZOOM, z - 1))}
+              disabled={zoom <= MIN_ZOOM}
+              aria-label="Zoom out"
+              style={{ width: 32, height: 32, borderRadius: 10, border: 'none', background: 'rgba(8,14,28,0.72)', color: '#fff', cursor: zoom <= MIN_ZOOM ? 'default' : 'pointer', fontSize: 18, fontWeight: 700, backdropFilter: 'blur(8px)', opacity: zoom <= MIN_ZOOM ? 0.4 : 1, display: 'grid', placeItems: 'center' }}
+            >−</button>
           </div>
 
           {/* City pin */}

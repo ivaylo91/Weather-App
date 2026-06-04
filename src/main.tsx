@@ -8,24 +8,23 @@ import Widget from './Widget.tsx'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Don't refetch just because the user switched tabs — our visibilitychange
-      // handler in App.tsx already handles this with a 10-min stale guard.
       refetchOnWindowFocus: false,
-      // Don't retry on reconnect — avoids burst on flaky networks.
       refetchOnReconnect: false,
-      // One retry is enough; the default of 3 triples the API load on errors.
       retry: 1,
     },
   },
 })
 
-const isWidget = window.location.hash === '#widget'
+const hash = window.location.hash            // e.g. '#widget' or '#widget&size=lg'
+const hashParams = new URLSearchParams(hash.slice(1).replace(/^widget/, ''))
+const isWidget = hash.startsWith('#widget')
+const widgetSize = (hashParams.get('size') ?? 'md') as 'sm' | 'md' | 'lg'
 const cityParam = new URLSearchParams(window.location.search).get('city') ?? undefined
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      {isWidget ? <Widget /> : <App initialCity={cityParam} />}
+      {isWidget ? <Widget size={widgetSize} /> : <App initialCity={cityParam} />}
     </QueryClientProvider>
   </StrictMode>,
 )

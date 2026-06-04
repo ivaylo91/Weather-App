@@ -12,6 +12,7 @@ import DailyList from '../components/DailyList'
 import AlertBanner from '../components/AlertBanner'
 import { SunArc, UVCard, WindCard, DetailCard } from '../components/DetailCards'
 import HistorySparkline from '../components/HistorySparkline'
+import RainBar from '../components/RainBar'
 
 interface TodayViewProps {
   city: CityData
@@ -116,6 +117,11 @@ export default function TodayView({ city, tone, accent, sky, unit, isLoading, is
           </div>
         )}
       </div>
+
+      {/* Minute-by-minute precipitation (next 2 hours) */}
+      {city.daily.length > 0 && (
+        <RainBar lat={city.latitude} lon={city.longitude} tone={tone} accent={accent} />
+      )}
 
       {/* Hourly — skeleton while loading, error state with retry, real chart when data arrives */}
       <Card tone={tone} style={city.hourly.length === 0 ? { minHeight: 170 } : {}}>
