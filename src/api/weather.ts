@@ -1,8 +1,20 @@
 import type { CityData, CityDetails, WeatherCondition, HourlyPoint, DailyDay, CitySuggestion } from '../types'
 
-const GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search'
-const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast'
-const AIR_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality'
+const KEY = import.meta.env.VITE_OPENMETEO_KEY as string | undefined
+const _k = KEY ? `&apikey=${KEY}` : ''
+
+const GEO_URL     = KEY
+  ? `https://customer-geocoding-api.open-meteo.com/v1/search`
+  : `https://geocoding-api.open-meteo.com/v1/search`
+const WEATHER_URL = KEY
+  ? `https://customer-api.open-meteo.com/v1/forecast`
+  : `https://api.open-meteo.com/v1/forecast`
+const AIR_URL     = KEY
+  ? `https://customer-air-quality-api.open-meteo.com/v1/air-quality`
+  : `https://air-quality-api.open-meteo.com/v1/air-quality`
+const ARCHIVE_URL = KEY
+  ? `https://customer-archive-api.open-meteo.com/v1/archive`
+  : `https://archive-api.open-meteo.com/v1/archive`
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -65,9 +77,9 @@ export async function fetchCityData(
     `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,weather_code,is_day` +
     `&hourly=temperature_2m,precipitation_probability,weather_code,is_day` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset,precipitation_probability_max` +
-    `&forecast_days=10&timezone=auto`
+    `&forecast_days=10&timezone=auto${_k}`
 
-  const airUrl = `${AIR_URL}?latitude=${lat}&longitude=${lon}&current=european_aqi`
+  const airUrl = `${AIR_URL}?latitude=${lat}&longitude=${lon}&current=european_aqi${_k}`
 
   const [weatherRes, airRes] = await Promise.all([
     fetch(weatherUrl),
@@ -213,7 +225,7 @@ export async function fetchCityData(
 
 export async function fetchCitySuggestions(query: string): Promise<CitySuggestion[]> {
   if (query.trim().length < 2) return []
-  const res = await fetch(`${GEO_URL}?name=${encodeURIComponent(query)}&count=6&language=en&format=json`)
+  const res = await fetch(`${GEO_URL}?name=${encodeURIComponent(query)}&count=6&language=en&format=json${_k}`)
   if (!res.ok) return []
   const data = await res.json()
   return data.results ?? []
@@ -319,9 +331,9 @@ export async function fetchHistoricalWeather(lat: number, lon: number): Promise<
   start.setDate(start.getDate() - 29) // 30 days back
   const fmt = (d: Date) => d.toISOString().split('T')[0]
 
-  const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}` +
+  const url = `${ARCHIVE_URL}?latitude=${lat}&longitude=${lon}` +
     `&start_date=${fmt(start)}&end_date=${fmt(end)}` +
-    `&daily=temperature_2m_max,temperature_2m_min&timezone=auto`
+    `&daily=temperature_2m_max,temperature_2m_min&timezone=auto${_k}`
 
   const res = await fetch(url)
   if (!res.ok) throw new Error('Failed to fetch historical weather')

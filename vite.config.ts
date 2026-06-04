@@ -42,8 +42,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
-            // Weather data — NetworkFirst: fresh if online, cached if offline
-            urlPattern: /^https:\/\/api\.open-meteo\.com\//,
+            // Weather forecast — covers both free and customer API subdomains
+            urlPattern: /^https:\/\/(customer-)?api\.open-meteo\.com\//,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'weather-api',
@@ -52,8 +52,8 @@ export default defineConfig({
             },
           },
           {
-            // Air quality — NetworkFirst with longer cache
-            urlPattern: /^https:\/\/air-quality-api\.open-meteo\.com\//,
+            // Air quality — covers both free and customer API subdomains
+            urlPattern: /^https:\/\/(customer-)?air-quality-api\.open-meteo\.com\//,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'air-quality-api',
@@ -62,12 +62,22 @@ export default defineConfig({
             },
           },
           {
-            // Geocoding — CacheFirst: city names rarely change
-            urlPattern: /^https:\/\/geocoding-api\.open-meteo\.com\//,
+            // Geocoding — covers both free and customer API subdomains
+            urlPattern: /^https:\/\/(customer-)?geocoding-api\.open-meteo\.com\//,
             handler: 'CacheFirst',
             options: {
               cacheName: 'geo-api',
               expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Historical archive — covers both free and customer API subdomains
+            urlPattern: /^https:\/\/(customer-)?archive-api\.open-meteo\.com\//,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'archive-api',
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 6 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },
