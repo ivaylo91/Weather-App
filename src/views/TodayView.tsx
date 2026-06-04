@@ -120,7 +120,7 @@ export default function TodayView({ city, tone, accent, sky, unit, isLoading, is
 
       {/* Minute-by-minute precipitation (next 2 hours) */}
       {city.daily.length > 0 && (
-        <RainBar lat={city.latitude} lon={city.longitude} tone={tone} accent={accent} />
+        <RainBar lat={city.latitude} lon={city.longitude} tone={tone} />
       )}
 
       {/* Hourly — skeleton while loading, error state with retry, real chart when data arrives */}

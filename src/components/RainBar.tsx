@@ -8,10 +8,9 @@ interface Props {
   lat: number
   lon: number
   tone: WeatherTone
-  accent: string
 }
 
-export default function RainBar({ lat, lon, tone, accent }: Props) {
+export default function RainBar({ lat, lon, tone }: Props) {
   const t = toneStyles(tone)
 
   const { data } = useQuery({
