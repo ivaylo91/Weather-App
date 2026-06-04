@@ -1,0 +1,48 @@
+{
+  "packageId": "bg.vremeto.dnes",
+  "host": "YOUR_VERCEL_URL",
+  "name": "Времето днес",
+  "launcherName": "Времето",
+  "display": "standalone",
+  "orientation": "portrait",
+  "themeColor": "#1d4ed8",
+  "navigationColor": "#1d4ed8",
+  "navigationColorDark": "#1e3a8a",
+  "navigationDividerColor": "#1d4ed8",
+  "navigationDividerColorDark": "#1e3a8a",
+  "backgroundColor": "#1e3a8a",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://YOUR_VERCEL_URL/pwa-512.png",
+  "maskableIconUrl": "https://YOUR_VERCEL_URL/pwa-512.png",
+  "monochromeIconUrl": "https://YOUR_VERCEL_URL/pwa-192.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./vremeto-release.keystore",
+    "alias": "vremeto-dnes"
+  },
+  "appVersionCode": 1,
+  "appVersionName": "1.0.0",
+  "shortcuts": [
+    {
+      "name": "Времето днес",
+      "shortName": "Времето",
+      "url": "/",
+      "icons": [{ "src": "https://YOUR_VERCEL_URL/pwa-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://YOUR_VERCEL_URL/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": { "enabled": false },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://YOUR_VERCEL_URL/",
+  "minSdkVersion": 19,
+  "appVersion": "1.0.0",
+  "metaQuestRequiresInternetPermission": true,
+  "additionalTrustedOrigins": [],
+  "retainedBundles": []
+}
