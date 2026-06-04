@@ -104,7 +104,7 @@ export default function App({ initialCity }: { initialCity?: string }) {
       const r = results[0]
       const id = makeId(r.latitude, r.longitude)
       const region = [r.admin1, r.country].filter(Boolean).join(', ')
-      const lc: StaticCity = { id, name: r.name, region, cond: 'clear-day', temp: 20, hi: 24, lo: 15, latitude: r.latitude, longitude: r.longitude }
+      const lc: StaticCity = { id, name: r.name, region, cond: 'partly-cloudy-day', temp: 20, hi: 24, lo: 15, latitude: r.latitude, longitude: r.longitude }
       setSavedCities(prev => prev.find(c => c.id === id) ? prev : [lc, ...prev])
       setCityId(id)
     })
@@ -123,7 +123,7 @@ export default function App({ initialCity }: { initialCity?: string }) {
             id,
             name: city,
             region,
-            cond: 'clear-day',
+            cond: 'partly-cloudy-day',
             temp: 20,
             hi: 22,
             lo: 16,
@@ -335,7 +335,7 @@ export default function App({ initialCity }: { initialCity?: string }) {
       id,
       name,
       region,
-      cond: 'clear-day',
+      cond: 'partly-cloudy-day',
       temp: 20,
       hi: 24,
       lo: 15,
