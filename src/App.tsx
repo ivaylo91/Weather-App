@@ -136,7 +136,7 @@ export default function App({ initialCity }: { initialCity?: string }) {
           setCityId(id)
         },
         () => { /* permission denied or unavailable */ },
-        { timeout: 8000 }
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
       )
     }
   }, [])
@@ -176,7 +176,7 @@ export default function App({ initialCity }: { initialCity?: string }) {
       lo: currentStaticCity.lo,
       time: '--:-- --', timeISO: '',
       sunrise: 6, sunset: 20,
-      det: { feels: currentStaticCity.temp, uv: 3, uvLabel: 'Moderate', wind: 10, windDir: 'N', gust: 18, humidity: 60, pressure: 1013, visibility: 14, dew: currentStaticCity.temp - 5, sunriseT: '6:00 AM', sunsetT: '8:00 PM', sunriseISO: '', sunsetISO: '', aqi: 25, aqiLabel: 'Good' },
+      det: { feels: currentStaticCity.temp, uv: 3, uvLabel: 'Moderate', wind: 10, windDir: 'N', gust: 18, humidity: 60, pressure: 1013, visibility: 14, cloudCover: 50, dew: currentStaticCity.temp - 5, sunriseT: '6:00 AM', sunsetT: '8:00 PM', sunriseISO: '', sunsetISO: '', aqi: 25, aqiLabel: 'Good' },
       alerts: [], hourly: [], daily: [],
       latitude: currentStaticCity.latitude,
       longitude: currentStaticCity.longitude,
@@ -215,7 +215,7 @@ export default function App({ initialCity }: { initialCity?: string }) {
       id: sc.id, name: sc.name, region: sc.region, cond: sc.cond,
       temp: sc.temp, hi: sc.hi, lo: sc.lo,
       time: '--:-- --', timeISO: '', sunrise: 6, sunset: 20,
-      det: { feels: sc.temp, uv: 3, uvLabel: 'Moderate', wind: 10, windDir: 'N', gust: 18, humidity: 60, pressure: 1013, visibility: 14, dew: sc.temp - 5, sunriseT: '6:00 AM', sunsetT: '8:00 PM', sunriseISO: '', sunsetISO: '', aqi: 25, aqiLabel: 'Good' },
+      det: { feels: sc.temp, uv: 3, uvLabel: 'Moderate', wind: 10, windDir: 'N', gust: 18, humidity: 60, pressure: 1013, visibility: 14, cloudCover: 50, dew: sc.temp - 5, sunriseT: '6:00 AM', sunsetT: '8:00 PM', sunriseISO: '', sunsetISO: '', aqi: 25, aqiLabel: 'Good' },
       alerts: [], hourly: [], daily: [], latitude: sc.latitude, longitude: sc.longitude,
     }
   }, [cityData, currentStaticCity, alertData])

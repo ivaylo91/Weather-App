@@ -74,9 +74,11 @@ export async function fetchCityData(
 ): Promise<CityData> {
   const weatherUrl =
     `${WEATHER_URL}?latitude=${lat}&longitude=${lon}` +
-    `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,weather_code,is_day` +
-    `&hourly=temperature_2m,precipitation_probability,weather_code,is_day` +
-    `&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset,precipitation_probability_max` +
+    // Use the best available NWP model for the coordinates automatically
+    `&models=best_match` +
+    `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,weather_code,is_day,cloud_cover` +
+    `&hourly=temperature_2m,precipitation_probability,weather_code,is_day,cloud_cover` +
+    `&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset,precipitation_probability_max,precipitation_sum,wind_speed_10m_max` +
     `&forecast_days=10&timezone=auto${_k}`
 
   const airUrl = `${AIR_URL}?latitude=${lat}&longitude=${lon}&current=european_aqi${_k}`
@@ -111,6 +113,7 @@ export async function fetchCityData(
   const pressure = Math.round(current.surface_pressure ?? 1013)
   const visibilityRaw = weather.current?.visibility ?? 14000
   const visibility = Math.round(visibilityRaw / 1000)
+  const cloudCover = Math.round(current.cloud_cover ?? 0)
   const dew = Math.round(temp - ((100 - humidity) / 5))
 
   const uvRaw = Math.round(weather.daily?.uv_index_max?.[0] ?? 0)
@@ -145,6 +148,7 @@ export async function fetchCityData(
     humidity,
     pressure,
     visibility: visibility > 0 ? visibility : 14,
+    cloudCover,
     dew,
     sunriseT,
     sunsetT,

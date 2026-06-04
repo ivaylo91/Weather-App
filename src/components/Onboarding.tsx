@@ -28,7 +28,7 @@ export default function Onboarding({ themeKey, onDone }: OnboardingProps) {
         onDone()
       },
       () => onDone(),
-      { timeout: 8000 }
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
     )
   }
   const sky = skyFor('partly-cloudy-day', themeKey)

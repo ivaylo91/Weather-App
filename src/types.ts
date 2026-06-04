@@ -39,6 +39,7 @@ export interface CityDetails {
   humidity: number
   pressure: number
   visibility: number
+  cloudCover: number   // 0–100 %
   dew: number
   sunriseT: string   // 12h formatted (legacy, used when timeISO unavailable)
   sunsetT: string
