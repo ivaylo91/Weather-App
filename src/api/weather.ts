@@ -76,8 +76,8 @@ export async function fetchCityData(
     `${WEATHER_URL}?latitude=${lat}&longitude=${lon}` +
     // Use the best available NWP model for the coordinates automatically
     `&models=best_match` +
-    `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,weather_code,is_day,cloud_cover` +
-    `&hourly=temperature_2m,precipitation_probability,weather_code,is_day,cloud_cover` +
+    `&current=temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,weather_code,is_day,cloud_cover,visibility` +
+    `&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,is_day,cloud_cover` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,sunrise,sunset,precipitation_probability_max,precipitation_sum,wind_speed_10m_max` +
     `&forecast_days=10&timezone=auto${_k}`
 
@@ -111,10 +111,12 @@ export async function fetchCityData(
   const windDeg = current.wind_direction_10m ?? 0
   const gust = Math.round(current.wind_gusts_10m ?? wind)
   const pressure = Math.round(current.surface_pressure ?? 1013)
-  const visibilityRaw = weather.current?.visibility ?? 14000
+  const visibilityRaw = current.visibility ?? 14000
   const visibility = Math.round(visibilityRaw / 1000)
   const cloudCover = Math.round(current.cloud_cover ?? 0)
-  const dew = Math.round(temp - ((100 - humidity) / 5))
+  const dew = current.dew_point_2m != null
+    ? Math.round(current.dew_point_2m)
+    : Math.round(temp - ((100 - humidity) / 5))
 
   const uvRaw = Math.round(weather.daily?.uv_index_max?.[0] ?? 0)
 
@@ -162,6 +164,7 @@ export async function fetchCityData(
   const hourlyTimes: string[] = weather.hourly?.time ?? []
   const hourlyTemps: number[] = weather.hourly?.temperature_2m ?? []
   const hourlyPop: number[] = weather.hourly?.precipitation_probability ?? []
+  const hourlyPrecip: number[] = weather.hourly?.precipitation ?? []
   const hourlyCodes: number[] = weather.hourly?.weather_code ?? []
   const hourlyIsDay: number[] = weather.hourly?.is_day ?? []
 
@@ -181,6 +184,7 @@ export async function fetchCityData(
       temp: Math.round(hourlyTemps[idx] ?? temp),
       cond: wmoToCondition(hCode, hIsDay),
       pop: Math.round(hourlyPop[idx] ?? 0),
+      precipMm: Math.round((hourlyPrecip[idx] ?? 0) * 10) / 10,
       now: i === 0,
     })
   }
@@ -191,6 +195,9 @@ export async function fetchCityData(
   const dailyMin: number[] = weather.daily?.temperature_2m_min ?? []
   const dailyCodes: number[] = weather.daily?.weather_code ?? []
   const dailyPop: number[] = weather.daily?.precipitation_probability_max ?? []
+  const dailyUV: number[] = weather.daily?.uv_index_max ?? []
+  const dailyWindMax: number[] = weather.daily?.wind_speed_10m_max ?? []
+  const dailyPrecipSum: number[] = weather.daily?.precipitation_sum ?? []
 
   const daily: DailyDay[] = dailyTimes.slice(0, 7).map((dateStr: string, i: number) => {
     const date = new Date(dateStr + 'T00:00:00')
@@ -206,6 +213,9 @@ export async function fetchCityData(
       hi: Math.round(dailyMax[i] ?? temp + 2),
       lo: Math.round(dailyMin[i] ?? temp - 4),
       pop: Math.round(dailyPop[i] ?? 0),
+      uv: Math.round(dailyUV[i] ?? uvRaw),
+      wind: Math.round(dailyWindMax[i] ?? wind),
+      precipSum: Math.round((dailyPrecipSum[i] ?? 0) * 10) / 10,
     }
   })
 

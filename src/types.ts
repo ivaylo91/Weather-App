@@ -16,6 +16,7 @@ export interface HourlyPoint {
   temp: number
   cond: WeatherCondition
   pop: number
+  precipMm: number   // actual precipitation amount in mm
   now: boolean
 }
 
@@ -27,6 +28,9 @@ export interface DailyDay {
   hi: number
   lo: number
   pop: number
+  wind: number       // max wind speed km/h
+  uv: number         // max UV index
+  precipSum: number  // total precipitation mm
 }
 
 export interface CityDetails {

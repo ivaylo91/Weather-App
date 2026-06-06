@@ -1,9 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import type { WeatherTone, CityData, Unit } from '../types'
 import { conv } from '../utils/temperature'
 import { useT } from '../i18n/LocaleContext'
 import { toneStyles } from '../utils/sky'
-import { mulberry } from '../utils/mulberry'
 import { WeatherScene } from '../components/WeatherScene'
 import { WeatherGlyph } from '../components/WeatherScene'
 import { Card, SectionLabel } from '../components/Card'
@@ -72,15 +71,12 @@ export default function ForecastView({ city, tone, accent, unit }: ForecastViewP
 
   const day = city.daily[sel]
 
-  const stats = useMemo(() => {
-    const r = mulberry(sel * 31 + 5)
-    return {
-      pop: day.pop,
-      wind: Math.round(8 + r() * 28),
-      humidity: Math.round(50 + r() * 40),
-      uv: Math.max(0, Math.round((1 - sel * 0.05) * city.det.uv + (r() - 0.5) * 2)),
-    }
-  }, [sel, day.pop, city.det.uv])
+  const stats = {
+    pop: day.pop,
+    wind: day.wind,
+    precipSum: day.precipSum,
+    uv: day.uv,
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -127,7 +123,7 @@ export default function ForecastView({ city, tone, accent, unit }: ForecastViewP
           {[
             ['umbrella', tr.forecastPrecip, `${stats.pop}%`],
             ['wind', tr.forecastWind, `${stats.wind}`],
-            ['drop', tr.forecastHumidity, `${stats.humidity}%`],
+            ['drop', tr.forecastPrecipMm, `${stats.precipSum}mm`],
             ['today', tr.forecastUV, `${stats.uv}`],
           ].map(([ic, lb, vl]) => (
             <div key={lb} style={{ textAlign: 'center', padding: '10px 4px', borderRadius: 16, background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>

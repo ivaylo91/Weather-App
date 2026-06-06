@@ -101,6 +101,7 @@ export interface Translations {
   forecastPrecip: string
   forecastWind: string
   forecastHumidity: string
+  forecastPrecipMm: string
   forecastUV: string
 }
 
@@ -201,6 +202,7 @@ const en: Translations = {
   forecastPrecip: 'Precip',
   forecastWind: 'Wind',
   forecastHumidity: 'Humidity',
+  forecastPrecipMm: 'Rain (mm)',
   forecastUV: 'UV',
 }
 
@@ -301,6 +303,7 @@ const bg: Translations = {
   forecastPrecip: 'Валеж',
   forecastWind: 'Вятър',
   forecastHumidity: 'Влажност',
+  forecastPrecipMm: 'Дъжд (мм)',
   forecastUV: 'УВ',
 }
 
