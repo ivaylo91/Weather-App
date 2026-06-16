@@ -103,6 +103,8 @@ export interface Translations {
   forecastHumidity: string
   forecastPrecipMm: string
   forecastUV: string
+  moon: string
+  moonPhases: Record<string, string>
 }
 
 const en: Translations = {
@@ -204,6 +206,17 @@ const en: Translations = {
   forecastHumidity: 'Humidity',
   forecastPrecipMm: 'Rain (mm)',
   forecastUV: 'UV',
+  moon: 'Moon',
+  moonPhases: {
+    'new': 'New Moon',
+    'waxing-crescent': 'Waxing Crescent',
+    'first-quarter': 'First Quarter',
+    'waxing-gibbous': 'Waxing Gibbous',
+    'full': 'Full Moon',
+    'waning-gibbous': 'Waning Gibbous',
+    'last-quarter': 'Last Quarter',
+    'waning-crescent': 'Waning Crescent',
+  },
 }
 
 const bg: Translations = {
@@ -305,6 +318,17 @@ const bg: Translations = {
   forecastHumidity: 'Влажност',
   forecastPrecipMm: 'Дъжд (мм)',
   forecastUV: 'УВ',
+  moon: 'Луна',
+  moonPhases: {
+    'new': 'Нова луна',
+    'waxing-crescent': 'Нарастващ сърп',
+    'first-quarter': 'Първа четвърт',
+    'waxing-gibbous': 'Нарастваща луна',
+    'full': 'Пълнолуние',
+    'waning-gibbous': 'Намаляваща луна',
+    'last-quarter': 'Последна четвърт',
+    'waning-crescent': 'Намаляващ сърп',
+  },
 }
 
 export const translations: Record<Locale, Translations> = { en, bg }

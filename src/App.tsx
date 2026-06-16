@@ -15,7 +15,6 @@ import AlertSheet from './components/AlertSheet'
 import SettingsSheet from './components/SettingsSheet'
 import ErrorBoundary from './components/ErrorBoundary'
 import InstallBanner from './components/InstallBanner'
-import BackgroundScene from './components/BackgroundScene'
 
 const TodayView    = lazy(() => import('./views/TodayView'))
 const ForecastView = lazy(() => import('./views/ForecastView'))
@@ -250,18 +249,11 @@ export default function App({ initialCity }: { initialCity?: string }) {
     }
   }, [city.cond, city.name, alertOnRain, alertOnSnow, notifPermission, locale])
 
-  // Compute sky from current city condition
+  // Compute sky from current city condition — used for accent colour and hero card gradient
   const sky = useMemo(() => skyFor(city.cond, themeKey), [city.cond, themeKey])
-  const tone: WeatherTone = toneOverride === 'auto' ? sky.tone : (toneOverride as WeatherTone)
+  // Always dark tone: app background is now white, hero card handles its own colouring
+  const tone = 'dark' as const
   const accent = sky.accent
-
-  // Background crossfade layers
-  const [bgLayers, setBgLayers] = useState<string[]>([sky.gradient])
-  useEffect(() => {
-    setBgLayers(prev =>
-      prev[prev.length - 1] === sky.gradient ? prev : [...prev.slice(-1), sky.gradient]
-    )
-  }, [sky.gradient])
 
   // Persist state
   useEffect(() => { LS.set('onboarded', onboarded) }, [onboarded])
@@ -449,19 +441,6 @@ export default function App({ initialCity }: { initialCity?: string }) {
   return (
     <LocaleContext.Provider value={localeValue}>
     <>
-      {/* Sky background layers */}
-      {bgLayers.map((g, i) => (
-        <div
-          key={g + i}
-          className={i === bgLayers.length - 1 && bgLayers.length > 1 ? 'bg-layer bg-fade' : 'bg-layer'}
-          style={{ background: g }}
-        />
-      ))}
-
-      {/* Dynamic weather background — rain, snow, clouds, sun, stars */}
-      <BackgroundScene cond={city.cond} />
-
-      {/* Content */}
       {/* Pull-to-refresh spinner */}
       {(pullDist > 0 || refreshing) && (
         <div style={{
@@ -489,7 +468,7 @@ export default function App({ initialCity }: { initialCity?: string }) {
       <div
         ref={scrollRef}
         className="app-scroll"
-        style={{ position: 'relative', zIndex: 1, color: t.text }}
+        style={{ color: t.text }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}

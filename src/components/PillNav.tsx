@@ -1,5 +1,4 @@
 import type { WeatherTone } from '../types'
-import { toneStyles } from '../utils/sky'
 import { useT } from '../i18n/LocaleContext'
 import Icon from './Icon'
 
@@ -10,8 +9,7 @@ interface PillNavProps {
   accent: string
 }
 
-export default function PillNav({ view, setView, tone, accent }: PillNavProps) {
-  const t = toneStyles(tone)
+export default function PillNav({ view, setView, tone: _tone, accent }: PillNavProps) {
   const tr = useT()
   const navItems = [
     { id: 'today',    label: tr.nav.today,    icon: 'today' },
@@ -51,12 +49,10 @@ export default function PillNav({ view, setView, tone, accent }: PillNavProps) {
           display: 'flex',
           gap: 4,
           padding: 6,
-          background: tone === 'light' ? 'rgba(20,28,48,0.42)' : 'rgba(255,255,255,0.7)',
-          border: `1px solid ${t.cardBorder}`,
+          background: '#FFFFFF',
+          border: '1px solid rgba(26,41,82,0.08)',
           borderRadius: 26,
-          boxShadow: '0 12px 40px rgba(20,30,60,0.28)',
-          backdropFilter: 'blur(22px) saturate(1.4)',
-          WebkitBackdropFilter: 'blur(22px) saturate(1.4)',
+          boxShadow: '0 8px 32px rgba(26,41,82,0.14)',
         }}
       >
         {navItems.map(it => {
@@ -81,7 +77,7 @@ export default function PillNav({ view, setView, tone, accent }: PillNavProps) {
                 padding: active ? '11px 18px' : '11px 14px',
                 borderRadius: 20,
                 background: active ? accent : 'transparent',
-                color: active ? '#fff' : t.text,
+                color: active ? '#fff' : '#1A2952',
                 transition: 'all .28s cubic-bezier(.4,0,.2,1)',
               }}
             >

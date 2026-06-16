@@ -24,8 +24,6 @@ export function Card({ tone, children, style = {}, className = '', onClick, pad 
         borderRadius: 26,
         padding: pad,
         boxShadow: t.shadow,
-        backdropFilter: 'blur(18px) saturate(1.3)',
-        WebkitBackdropFilter: 'blur(18px) saturate(1.3)',
         color: t.text,
         cursor: onClick ? 'pointer' : 'default',
         ...style,

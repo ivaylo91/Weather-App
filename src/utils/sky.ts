@@ -1,5 +1,31 @@
 import type { WeatherCondition, WeatherTone } from '../types'
 
+// Large emoji displayed in the hero card
+export const CONDITION_EMOJI: Record<WeatherCondition, string> = {
+  'clear-day':           '☀️',
+  'clear-night':         '🌙',
+  'partly-cloudy-day':   '⛅',
+  'partly-cloudy-night': '🌛',
+  'cloudy':              '☁️',
+  'rain':                '🌧️',
+  'thunderstorm':        '⛈️',
+  'snow':                '❄️',
+  'fog':                 '🌫️',
+}
+
+// Per-condition gradient used as the hero card background
+export const HERO_GRADIENT: Record<WeatherCondition, string> = {
+  'clear-day':           'linear-gradient(145deg, #FFB347 0%, #FF7043 100%)',
+  'clear-night':         'linear-gradient(145deg, #1E2E62 0%, #0D1740 100%)',
+  'partly-cloudy-day':   'linear-gradient(145deg, #5BA8F0 0%, #3272CC 100%)',
+  'partly-cloudy-night': 'linear-gradient(145deg, #263B70 0%, #142254 100%)',
+  'cloudy':              'linear-gradient(145deg, #6B82C4 0%, #485A9E 100%)',
+  'rain':                'linear-gradient(145deg, #3A74BC 0%, #1A4A8C 100%)',
+  'thunderstorm':        'linear-gradient(145deg, #2D2B6E 0%, #181642 100%)',
+  'snow':                'linear-gradient(145deg, #80AACC 0%, #5080AA 100%)',
+  'fog':                 'linear-gradient(145deg, #8898BB 0%, #6575A0 100%)',
+}
+
 export interface ConditionDef {
   label: string
   particle: string
@@ -78,23 +104,25 @@ export function skyFor(conditionKey: WeatherCondition, themeKey: string): SkyRes
 
 export function toneStyles(tone: WeatherTone) {
   if (tone === 'light') return {
+    // White text on a colored (hero card) background
     text: '#ffffff',
     dim: 'rgba(255,255,255,0.74)',
-    faint: 'rgba(255,255,255,0.5)',
-    cardBg: 'rgba(255,255,255,0.13)',
-    cardBorder: 'rgba(255,255,255,0.22)',
-    chip: 'rgba(255,255,255,0.18)',
-    track: 'rgba(255,255,255,0.18)',
-    shadow: '0 10px 30px rgba(0,0,0,0.18)',
+    faint: 'rgba(255,255,255,0.50)',
+    cardBg: 'rgba(255,255,255,0.18)',
+    cardBorder: 'rgba(255,255,255,0.28)',
+    chip: 'rgba(255,255,255,0.22)',
+    track: 'rgba(255,255,255,0.25)',
+    shadow: '0 4px 20px rgba(0,0,0,0.18)',
   }
+  // Dark navy text on a white card / light app background
   return {
-    text: '#15243f',
-    dim: 'rgba(21,36,63,0.62)',
-    faint: 'rgba(21,36,63,0.40)',
-    cardBg: 'rgba(255,255,255,0.62)',
-    cardBorder: 'rgba(255,255,255,0.85)',
-    chip: 'rgba(255,255,255,0.72)',
-    track: 'rgba(21,36,63,0.12)',
-    shadow: '0 10px 34px rgba(36,58,102,0.14)',
+    text: '#1A2952',
+    dim: 'rgba(26,41,82,0.55)',
+    faint: 'rgba(26,41,82,0.35)',
+    cardBg: '#FFFFFF',
+    cardBorder: 'rgba(26,41,82,0.07)',
+    chip: '#EEF2FF',
+    track: 'rgba(26,41,82,0.08)',
+    shadow: '0 2px 20px rgba(26,41,82,0.09)',
   }
 }

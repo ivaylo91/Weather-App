@@ -1,18 +1,18 @@
 import { useRef } from 'react'
 import type { CSSProperties } from 'react'
 import type { WeatherTone, CityData, Unit, WindUnit, StaticCity } from '../types'
-import { toneStyles } from '../utils/sky'
+import { toneStyles, CONDITION_EMOJI, HERO_GRADIENT } from '../utils/sky'
 import type { SkyResult } from '../utils/sky'
-import { conv } from '../utils/temperature'
+import { conv, convWind, windUnitLabel } from '../utils/temperature'
 import { useT } from '../i18n/LocaleContext'
-import { WeatherScene } from '../components/WeatherScene'
-import { Card, SectionLabel } from '../components/Card'
+import { Card } from '../components/Card'
 import HourlyStrip from '../components/HourlyStrip'
 import DailyList from '../components/DailyList'
 import AlertBanner from '../components/AlertBanner'
-import { SunArc, UVCard, WindCard, DetailCard } from '../components/DetailCards'
+import { SunArc, UVCard, WindCard, DetailCard, MoonCard } from '../components/DetailCards'
 import HistorySparkline from '../components/HistorySparkline'
 import RainBar from '../components/RainBar'
+import Icon from '../components/Icon'
 
 interface TodayViewProps {
   city: CityData
@@ -48,7 +48,7 @@ function LoadingSkeleton({ tone }: { tone: WeatherTone }) {
   )
 }
 
-export default function TodayView({ city, tone, accent, sky, unit, isLoading, isError, onRefresh, onAlert, savedCities = [], cityId, onSwipe, windUnit = 'kmh' }: TodayViewProps) {
+export default function TodayView({ city, tone, accent, sky: _sky, unit, isLoading, isError, onRefresh, onAlert, savedCities = [], cityId, onSwipe, windUnit = 'kmh' }: TodayViewProps) {
   const t = toneStyles(tone)
   const tr = useT()
   const d = city.det
@@ -75,47 +75,86 @@ export default function TodayView({ city, tone, accent, sky, unit, isLoading, is
     return <LoadingSkeleton tone={tone} />
   }
 
+  const heroGradient = HERO_GRADIENT[city.cond] ?? HERO_GRADIENT['clear-day']
+  const emoji = CONDITION_EMOJI[city.cond] ?? '🌤️'
+  const wLabel = windUnitLabel(windUnit)
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {city.alerts?.length > 0 && <AlertBanner alerts={city.alerts} tone={tone} onClick={onAlert} />}
 
-      {/* Hero */}
+      {/* Hero card */}
       <div
-        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '6px 0 10px' }}
+        className="hero-rise"
+        style={{ background: heroGradient, borderRadius: 28, padding: '22px 22px 18px', color: '#fff', position: 'relative', overflow: 'hidden' }}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        <div className="hero-rise" style={{ marginBottom: 2 }}>
-          <WeatherScene kind={sky.particle} size={210} />
-        </div>
-        <div className="hero-rise" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', animationDelay: '.05s' }}>
-          <span style={{ fontSize: 'clamp(84px, 24vw, 124px)', fontWeight: 500, letterSpacing: -5, lineHeight: 0.9 }}>
-            {conv(city.temp, unit)}
+        {/* Top row: emoji + temperature */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+          <span style={{ fontSize: 80, lineHeight: 1, filter: 'drop-shadow(0 4px 14px rgba(0,0,0,0.28))', flexShrink: 0 }}>
+            {emoji}
           </span>
-          <span style={{ fontSize: 'clamp(34px, 8vw, 48px)', fontWeight: 300, marginTop: '0.18em' }}>°</span>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', lineHeight: 1 }}>
+              <span style={{ fontSize: 'clamp(64px, 18vw, 88px)', fontWeight: 600, letterSpacing: -4 }}>
+                {conv(city.temp, unit)}
+              </span>
+              <span style={{ fontSize: 'clamp(26px, 7vw, 36px)', fontWeight: 300, marginTop: '0.14em' }}>°</span>
+            </div>
+            <div style={{ fontSize: 13.5, fontWeight: 600, opacity: 0.8, marginTop: 2 }}>
+              {tr.feelsLike} {conv(d.feels, unit)}°
+            </div>
+          </div>
         </div>
-        <div className="hero-rise" style={{ fontSize: 19, fontWeight: 700, marginTop: 4, animationDelay: '.1s' }}>
-          {tr.cond[city.cond] ?? city.cond}
-        </div>
-        <div className="hero-rise" style={{ display: 'flex', gap: 14, marginTop: 6, fontSize: 15, fontWeight: 600, color: t.dim, animationDelay: '.14s' }}>
-          <span>H:{conv(city.hi, unit)}°</span>
-          <span>L:{conv(city.lo, unit)}°</span>
-          <span>{tr.feelsLike} {conv(d.feels, unit)}°</span>
+
+        {/* Bottom row: condition + H/L */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: -0.3 }}>{tr.cond[city.cond] ?? city.cond}</div>
+            <div style={{ fontSize: 12.5, fontWeight: 600, opacity: 0.7, marginTop: 2 }}>{city.time}</div>
+          </div>
+          <div style={{ textAlign: 'right', fontSize: 14, fontWeight: 700, opacity: 0.85 }}>
+            <div>H: {conv(city.hi, unit)}°</div>
+            <div>L: {conv(city.lo, unit)}°</div>
+          </div>
         </div>
 
         {/* City swipe dots */}
         {showDots && (
-          <div className="hero-rise" style={{ display: 'flex', gap: 6, marginTop: 14, animationDelay: '.18s' }}>
+          <div style={{ display: 'flex', gap: 5, marginTop: 14, justifyContent: 'center' }}>
             {savedCities.map((c, i) => (
               <div key={c.id} style={{
-                width: i === currentIdx ? 18 : 6,
-                height: 6, borderRadius: 3,
-                background: i === currentIdx ? accent : t.faint,
+                width: i === currentIdx ? 16 : 6, height: 6, borderRadius: 3,
+                background: i === currentIdx ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)',
                 transition: 'all .3s cubic-bezier(.4,0,.2,1)',
               }} />
             ))}
           </div>
         )}
+      </div>
+
+      {/* Stats row */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+        background: '#fff', borderRadius: 20,
+        boxShadow: '0 2px 16px rgba(26,41,82,0.08)',
+        overflow: 'hidden',
+      }}>
+        {[
+          { icon: 'umbrella', value: `${city.hourly[0]?.pop ?? 0}%`,    label: tr.chanceOfPrecip.split(' ')[0] },
+          { icon: 'wind',     value: `${convWind(d.wind, windUnit)} ${wLabel}`, label: tr.wind },
+          { icon: 'drop',     value: `${d.humidity}%`,                  label: tr.humidity },
+        ].map((stat, i) => (
+          <div key={i} style={{
+            padding: '14px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+            borderRight: i < 2 ? '1px solid rgba(26,41,82,0.07)' : 'none',
+          }}>
+            <Icon name={stat.icon} size={20} stroke={2} style={{ color: accent }} />
+            <div style={{ fontSize: 15, fontWeight: 800, color: '#1A2952' }}>{stat.value}</div>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(26,41,82,0.45)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{stat.label}</div>
+          </div>
+        ))}
       </div>
 
       {/* Minute-by-minute precipitation (next 2 hours) */}
@@ -124,35 +163,43 @@ export default function TodayView({ city, tone, accent, sky, unit, isLoading, is
       )}
 
       {/* Hourly — skeleton while loading, error state with retry, real chart when data arrives */}
-      <Card tone={tone} style={city.hourly.length === 0 ? { minHeight: 170 } : {}}>
-        <SectionLabel tone={tone} icon="today">{tr.hourlyForecast}</SectionLabel>
-        {city.hourly.length > 0 ? (
-          <HourlyStrip hours={city.hourly} tone={tone} accent={accent} unit={unit} />
-        ) : isError ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '24px 0', color: t.dim }}>
-            <span style={{ fontSize: 13, fontWeight: 600 }}>Could not load forecast</span>
-            <button onClick={onRefresh} className="press" style={{ padding: '8px 20px', borderRadius: 14, border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.text, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
-              Retry
-            </button>
-          </div>
-        ) : (
-          <div style={{ height: 120, borderRadius: 14, background: t.track, animation: 'skPulse 1.8s ease-in-out infinite', marginTop: 4 }} />
-        )}
-      </Card>
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '4px 4px 10px' }}>
+          <span style={{ fontSize: 16, fontWeight: 800, color: t.text }}>{tr.hourlyForecast}</span>
+        </div>
+        <Card tone={tone} style={city.hourly.length === 0 ? { minHeight: 170 } : {}}>
+          {city.hourly.length > 0 ? (
+            <HourlyStrip hours={city.hourly} tone={tone} accent={accent} unit={unit} />
+          ) : isError ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '24px 0', color: t.dim }}>
+              <span style={{ fontSize: 13, fontWeight: 600 }}>Could not load forecast</span>
+              <button onClick={onRefresh} className="press" style={{ padding: '8px 20px', borderRadius: 14, border: `1px solid ${t.cardBorder}`, background: t.cardBg, color: t.text, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
+                Retry
+              </button>
+            </div>
+          ) : (
+            <div style={{ height: 120, borderRadius: 14, background: t.track, animation: 'skPulse 1.8s ease-in-out infinite', marginTop: 4 }} />
+          )}
+        </Card>
+      </div>
 
       {/* 7-day — same pattern */}
-      <Card tone={tone} style={city.daily.length === 0 ? { minHeight: 200 } : {}}>
-        <SectionLabel tone={tone} icon="forecast">{tr.sevenDay}</SectionLabel>
-        {city.daily.length > 0 ? (
-          <DailyList days={city.daily} tone={tone} accent={accent} unit={unit} />
-        ) : !isError ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {[0,1,2,3].map(i => (
-              <div key={i} style={{ height: 40, borderRadius: 10, background: t.track, animation: `skPulse 1.8s ease-in-out ${i*0.15}s infinite` }} />
-            ))}
-          </div>
-        ) : null}
-      </Card>
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '4px 4px 10px' }}>
+          <span style={{ fontSize: 16, fontWeight: 800, color: t.text }}>{tr.sevenDay}</span>
+        </div>
+        <Card tone={tone} style={city.daily.length === 0 ? { minHeight: 200 } : {}}>
+          {city.daily.length > 0 ? (
+            <DailyList days={city.daily} tone={tone} accent={accent} unit={unit} />
+          ) : !isError ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[0,1,2,3].map(i => (
+                <div key={i} style={{ height: 40, borderRadius: 10, background: t.track, animation: `skPulse 1.8s ease-in-out ${i*0.15}s infinite` }} />
+              ))}
+            </div>
+          ) : null}
+        </Card>
+      </div>
 
       {/* Details grid */}
       {city.daily.length > 0 && (
@@ -169,6 +216,7 @@ export default function TodayView({ city, tone, accent, sky, unit, isLoading, is
           <DetailCard tone={tone} accent={accent} icon="eye" label={tr.visibility} value={d.visibility} unit="km" sub={tr.visibilitySub(d.visibility)} />
           <DetailCard tone={tone} accent={accent} icon="gauge" label={tr.pressure} value={d.pressure} unit="hPa" sub={tr.pressureSub(d.pressure)} />
           <DetailCard tone={tone} accent={accent} icon="leaf" label={tr.airQuality} value={d.aqi} sub={tr.aqi(d.aqi)} />
+          <MoonCard tone={tone} accent={accent} />
         </div>
       )}
 

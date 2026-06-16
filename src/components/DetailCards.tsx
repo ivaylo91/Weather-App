@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { WeatherTone, CityData, WindUnit } from '../types'
 import { toneStyles } from '../utils/sky'
 import { convWind, windUnitLabel, formatLocalTime } from '../utils/temperature'
+import { getMoonPhase, moonSVGPath } from '../utils/moon'
 import { useT, useLocale } from '../i18n/LocaleContext'
 import { Card } from './Card'
 import Icon from './Icon'
@@ -145,6 +146,35 @@ export function WindCard({ city, tone, accent, windUnit = 'kmh' }: WindCardProps
         </div>
         <div style={{ fontSize: 13, fontWeight: 700, color: t.dim }}>{city.det.windDir}</div>
       </div>
+    </DetailCard>
+  )
+}
+
+// ---- Moon phase card ----
+interface MoonCardProps {
+  tone: WeatherTone
+  accent: string
+}
+
+export function MoonCard({ tone, accent }: MoonCardProps) {
+  const tr = useT()
+  const t = toneStyles(tone)
+  const { phase, illumination, name } = getMoonPhase()
+
+  const R = 18, cx = 22, cy = 22
+  const litPath = moonSVGPath(phase, R, cx, cy)
+
+  return (
+    <DetailCard
+      tone={tone} accent={accent}
+      icon="moon" label={tr.moon}
+      value={`${Math.round(illumination * 100)}%`}
+      sub={tr.moonPhases[name] ?? name}
+    >
+      <svg width="44" height="44" viewBox="0 0 44 44" style={{ marginTop: -2 }} aria-hidden="true">
+        <circle cx={cx} cy={cy} r={R} fill={t.track} />
+        <path d={litPath} fill={accent} opacity={0.88} />
+      </svg>
     </DetailCard>
   )
 }
